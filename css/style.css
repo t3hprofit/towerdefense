@@ -106,12 +106,16 @@ button { font-family: inherit; color: inherit; }
 .scr-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
 .scr-head h2 { margin: 0; font-size: 18px; letter-spacing: 0.2em; color: var(--cyan); }
 .cred { color: var(--yellow); font-weight: 700; }
+.tier-box { border: 1px solid rgba(0,240,255,0.25); background: rgba(0,240,255,0.03); padding: 8px 8px 6px; margin-bottom: 14px; }
+.tier-label { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.tier-label .tl { font-size: 11px; font-weight: 700; letter-spacing: 0.3em; color: var(--cyan); }
+.tier-label .tier-cur { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; color: var(--c, var(--dim)); }
 .tier-picker { display: flex; gap: 4px; margin-bottom: 6px; }
 .tier { flex: 1; min-width: 0; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); padding: 8px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 44px; }
 .tier .tn { font-weight: 700; letter-spacing: 0.06em; font-size: 11px; color: var(--c); white-space: nowrap; }
 .tier .tm { font-size: 9px; color: var(--dim); white-space: nowrap; }
 .tier.sel { border-color: var(--c); background: color-mix(in srgb, var(--c) 15%, transparent); box-shadow: 0 0 10px color-mix(in srgb, var(--c) 40%, transparent); }
-.tier-desc { font-size: 12px; color: var(--dim); text-align: center; margin-bottom: 12px; min-height: 16px; }
+.tier-desc { font-size: 12px; color: var(--dim); text-align: center; min-height: 16px; }
 .district-list { display: flex; flex-direction: column; gap: 10px; }
 .dcard { border: 1px solid var(--line); background: rgba(255,255,255,0.03); padding: 12px 14px; display: flex; align-items: center; gap: 12px; text-align: left; position: relative; }
 .dcard .num { font-size: 28px; font-weight: 900; color: var(--c); width: 36px; text-shadow: 0 0 10px var(--c); }

@@ -61,6 +61,7 @@ export class UI {
       b.onclick = () => { Save.setSetting('tier', id); Audio.play('blip'); this.renderDistricts(); };
       tp.appendChild(b);
     }
+    const tc = $('#tier-cur'); tc.textContent = TIERS[cur].name; tc.style.setProperty('--c', TIERS[cur].color);
     $('#tier-desc').textContent = TIERS[cur].desc;
     for (const d of DISTRICTS) {
       const unlocked = Save.isUnlocked(d.id); const rec = Save.district(d.id);
