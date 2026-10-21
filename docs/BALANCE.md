@@ -39,7 +39,9 @@ Current readings (commit at time of writing, before the boss rule):
 Owner's own results on Netrunner so far: Watson 20 ★★★, Westbrook 4 ★ (under-hacked),
 Heywood 13 ★★, Santo 20 ★★★, Pacifica 20 ★★★ (8 towers, 20 hacks, 0 purges, 5 access points;
 feedback: breach urgency good, Arc Nodes carried, reroute under-used, no changes requested).
-Blackwall Watson: lost on wave 7.
+Blackwall Watson: lost on wave 7 (before the RAM refund), then **cleared 2/20 ★** with 10 towers,
+64 quickhacks, 7 purges, 9 daemons, 6 access points, 18 leaks, 328,500 score. That is the intended
+shape for the top tier: core spent as a resource, won on the last few points.
 
 First-time player (owner's coworker), Street Kid Watson: 19 ★★★, 6 towers, 15 hacks, **0 daemons**
 (never opened a breach), 3 purges, 11 access points, 1 leak. Street Kid is landing where intended for
