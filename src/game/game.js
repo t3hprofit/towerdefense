@@ -351,7 +351,8 @@ export class Game {
     this.updateProjectiles(dt);
     this.updateFx(dt);
     if (this.lives <= 0 && this.simActive()) { this.finish(false); return; }
-    if (this.waveActive && !this.spawnList.length && !this.enemies.length) this.endWave();
+    // A boss leak ends the run inside updateEnemies; the empty field must not then count as a wave clear.
+    if (this.simActive() && this.waveActive && !this.spawnList.length && !this.enemies.length) this.endWave();
   }
   spawn(s) {
     const def = ENEMIES[s.type];
