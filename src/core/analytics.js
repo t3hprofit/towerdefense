@@ -19,7 +19,10 @@ export function setConsent(v) {
 }
 
 function load() {
-  if (loaded || typeof window === 'undefined' || LOCAL.test(location.hostname)) return;
+  if (typeof window === 'undefined' || LOCAL.test(location.hostname)) return;
+  window['ga-disable-' + ID] = false;
+  // Turned back on after being turned off in this page: gtag is already loaded, just re-grant.
+  if (loaded) { window.gtag('consent', 'update', { analytics_storage: 'granted' }); return; }
   loaded = true;
   window.dataLayer = window.dataLayer || [];
   window.gtag = function () { window.dataLayer.push(arguments); };
