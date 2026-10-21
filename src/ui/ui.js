@@ -107,16 +107,17 @@ export class UI {
     }
     this.updateTip();
     this.els.btnBreach.disabled = !g.canBreach(); this.els.btnBreach.textContent = `BREACH (${g.breachCharges})`;
-    this.els.btnWave.disabled = g.waveActive || g.wave >= g.district.waves;
+    this.els.btnWave.disabled = g.wave >= g.district.waves;
+    this.els.btnWave.classList.toggle('hidden', g.waveActive || g.wave >= g.district.waves || !this.els.panel.classList.contains('hidden'));
     const cd = g.waveTimer !== null && !g.waveActive ? ` · ${Math.ceil(g.waveTimer)}s` : '';
-    this.els.btnWave.textContent = g.waveActive ? 'IN PROGRESS' : (g.wave === 0 ? 'START WAVE' : 'NEXT WAVE') + cd;
+    this.els.btnWave.textContent = (g.wave === 0 ? 'START WAVE' : 'NEXT WAVE') + cd;
     this.els.waveInfo.innerHTML = g.waveInfoText();
   }
   // Description of the selected tower / quickhack, shown just above the tray (never over the top of the map).
   updateTip() {
     const g = this.game; const sel = g.selected; const tip = this.els.tip;
     if (!sel || !this.els.panel.classList.contains('hidden')) { tip.classList.add('hidden'); return; }
-    if (sel.kind === 'tower') { const d = TOWERS[sel.id]; tip.style.setProperty('--c', d.color); tip.innerHTML = `<b>${d.name}</b><span class="tc">€$${g.towerCost(sel.id)}</span> · ${d.brand}. ${d.desc} <span style="color:var(--dim)">Tap an empty cell to build.</span>`; }
+    if (sel.kind === 'tower') { const d = TOWERS[sel.id]; tip.style.setProperty('--c', d.color); tip.innerHTML = `<b>${d.name}</b><span class="tc">€$${g.towerCost(sel.id)}</span> · ${d.desc} <span style="color:var(--dim)">Tap an empty cell.</span>`; }
     else { const q = QUICKHACKS[sel.id]; tip.style.setProperty('--c', q.color); tip.innerHTML = `<b>${q.name}</b><span class="tc ram">${q.cost} RAM</span> · ${q.desc} <span style="color:var(--dim)">${q.target === 'tower' ? 'Tap an offline tower.' : 'Tap an enemy.'}</span>`; }
     tip.classList.remove('hidden');
   }
@@ -142,7 +143,7 @@ export class UI {
   }
 
   // ---------- Panels ----------
-  closePanel() { this.panelTarget = null; this.els.panel.classList.add('hidden'); this.els.panel.innerHTML = ''; this.els.panel.className = 'panel hidden'; if (this.game?.district) this.updateTip(); }
+  closePanel() { this.panelTarget = null; this.els.panel.classList.add('hidden'); this.els.panel.innerHTML = ''; this.els.panel.className = 'panel hidden'; if (this.game?.district) { this.updateTip(); this.els.btnWave.classList.toggle('hidden', this.game.waveActive || this.game.wave >= this.game.district.waves); } }
   // Signature of the state a panel depends on; when it changes the panel is redrawn.
   panelSig() {
     const g = this.game, p = this.panelTarget; if (!p) return '';
@@ -168,7 +169,7 @@ export class UI {
     p.innerHTML = `<div class="ph"><span class="t" style="color:${d.color}">${d.name} <span style="color:var(--dim);font-size:11px">MK.${t.level + 1}${off ? ' · <span style="color:var(--red)">OFFLINE ' + Math.ceil(t.offline) + 's</span>' : ''}${!off && g.isFirewalled(t) ? ' · <span style="color:var(--green)">FIREWALLED</span>' : ''}</span></span><button class="x">✕</button></div>
       <div class="stats">${statBits.join(' · ')}</div><div class="desc">${d.desc}</div>
       <div class="acts">${off ? `<button class="btn pink" id="p-purge">PURGE (${QUICKHACKS.purge.cost} RAM)</button>` : ''}${up !== null ? `<button class="btn yellow" id="p-up">UPGRADE €$${up}</button>` : '<button class="btn" disabled>MAX LEVEL</button>'}<button class="btn danger" id="p-sell">SELL €$${Math.round(t.spent * SELL_RATIO)}</button></div>`;
-    p.classList.remove('hidden'); this.updateTip();
+    p.classList.remove('hidden'); this.updateTip(); this.els.btnWave.classList.add('hidden');
     p.querySelector('.x').onclick = () => { g.selectedTower = null; this.closePanel(); };
     const u = p.querySelector('#p-up'); if (u) u.onclick = () => g.upgrade(t);
     p.querySelector('#p-sell').onclick = () => g.sell(t);
@@ -182,7 +183,7 @@ export class UI {
     p.innerHTML = `<div class="ph"><span class="t" style="color:var(--purple)">ACCESS POINT · ${ap.name}</span><button class="x">✕</button></div>
       <div class="stats">TYPE <b>${ap.type}</b> · COST <b>${ap.cost} RAM</b> · COOLDOWN <b>${ap.cooldownDef}s</b></div><div class="desc">${eff}</div>
       <div class="acts"><button class="btn pink primary" id="p-jack" ${cd || g.ram < ap.cost ? 'disabled' : ''}>${cd || (g.ram < ap.cost ? 'NEED RAM' : 'JACK IN')}</button></div>`;
-    p.classList.remove('hidden'); this.updateTip();
+    p.classList.remove('hidden'); this.updateTip(); this.els.btnWave.classList.add('hidden');
     p.querySelector('.x').onclick = () => this.closePanel();
     p.querySelector('#p-jack').onclick = () => g.jackIn(ap);
   }
