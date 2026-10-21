@@ -144,6 +144,7 @@ export class UI {
   }
 
   // ---------- Panels ----------
+  panelOpen() { return !this.els.panel.classList.contains('hidden'); }
   closePanel() { this.panelTarget = null; this.els.panel.classList.add('hidden'); this.els.panel.innerHTML = ''; this.els.panel.className = 'panel hidden'; if (this.game?.district) { this.updateTip(); this.els.btnWave.classList.toggle('hidden', this.game.waveActive || this.game.wave >= this.game.district.waves); } }
   // Signature of the state a panel depends on; when it changes the panel is redrawn.
   panelSig() {

@@ -101,6 +101,8 @@ export class Game {
   tap(x, y) {
     if (this.state !== 'play' || this.paused) return;
     const c = Math.floor(x), r = Math.floor(y);
+    // A tap while a tower / access point panel is open only dismisses it (never builds or casts).
+    if (this.ui.panelOpen?.()) { const t = this.towerAt(c, r), ap = this.apAt(c, r); this.selectedTower = null; this.ui.closePanel(); if (t) { this.selectedTower = t; this.ui.openTowerPanel(t); } else if (ap) this.ui.openApPanel(ap); return; }
     // Quickhack casting
     if (this.selected?.kind === 'hack') {
       const qh = QUICKHACKS[this.selected.id];
