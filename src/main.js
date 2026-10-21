@@ -63,11 +63,13 @@ window.addEventListener('keydown', (e) => {
 
 // Pause when backgrounded (phone lock, app switch)
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (game.state === 'play') ui.pause(true); return; }
+  if (document.hidden) { if (game.state === 'play') ui.pause(true); Audio.background(); return; }
   // Back from lock / app switch: resume audio and check for a new version.
-  if (Audio.ctx) Audio.init();
+  Audio.foreground();
   if (swReg) swReg.update().catch(() => {});
 });
+
+window.addEventListener('pagehide', () => Audio.background());
 
 // ---------- Main loop ----------
 let last = performance.now();

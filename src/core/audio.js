@@ -100,5 +100,8 @@ class AudioEngine {
     this.musicTimer = setInterval(tick, 100);
   }
   stopMusic() { if (this.musicTimer) { clearInterval(this.musicTimer); this.musicTimer = null; } }
+  // Backgrounded: silence everything and stop scheduling (throttled timers otherwise stutter the music).
+  background() { this.stopMusic(); if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }
+  foreground() { if (!this.ctx) return; this.ctx.resume().catch(() => {}); if (this.musicOn) this.startMusic(); }
 }
 export const Audio = new AudioEngine();
