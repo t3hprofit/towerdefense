@@ -30,7 +30,9 @@ Current readings (commit at time of writing):
 (numbers are core left on wave 10)
 
 Owner's own results on Netrunner so far: Watson 20 ★★★, Westbrook 4 ★ (under-hacked),
-Heywood 13 ★★, Santo 20 ★★★. Blackwall Watson: lost on wave 7.
+Heywood 13 ★★, Santo 20 ★★★, Pacifica 20 ★★★ (8 towers, 20 hacks, 0 purges, 5 access points;
+feedback: breach urgency good, Arc Nodes carried, reroute under-used, no changes requested).
+Blackwall Watson: lost on wave 7.
 
 ## Knobs
 
