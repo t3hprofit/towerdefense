@@ -17,7 +17,7 @@ export const DISTRICTS = [
     ],
     roster: [
       { type: 'scav', from: 1, weight: 5 }, { type: 'maelstrom', from: 3, weight: 2 },
-      { type: 'drone', from: 2, weight: 2 }, { type: 'netrunner', from: 4, weight: 1.2 },
+      { type: 'drone', from: 2, weight: 2 }, { type: 'netrunner', from: 5, weight: 0.8 },
     ],
     boss: 'royce',
     hints: true,
@@ -83,7 +83,7 @@ export const DISTRICTS = [
   {
     id: 'pacifica', num: 5, name: 'PACIFICA', sub: 'Coastview · Grand Imperial Mall', color: '#b14cff', accent: '#00f0ff',
     desc: 'Voodoo Boys own the net here. Their netrunners will strip your towers offline unless you bring ICE.',
-    difficulty: 1.0, waves: 10, startEddies: 480, routeMode: 'switch',
+    difficulty: 0.9, waves: 10, startEddies: 480, routeMode: 'switch',
     routes: [
       [[4,-1],[4,4],[1,4],[1,10],[7,10],[7,14]],
       [[4,-1],[4,4],[7,4],[7,7],[2,7],[2,12],[7,12],[7,14]],
