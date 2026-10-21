@@ -75,6 +75,8 @@ then alternate column/row of the last pick. The generator plants a valid path an
 daemon sequences from it with overlaps, so every offered daemon is reachable in one buffer
 (brute-force verified over thousands of seeds). Timer 35s minus 2 per district, starts on first pick.
 Charges: 1 at start, +1 after waves 3, 6, 9. At most one money (DATAMINE) daemon per matrix.
+A one-time intro card (`ui.maybeBreachIntro`, flag `settings.breachIntro`) appears 2.5s into a player's
+first district with a JACK IN NOW button, because a first-time tester never opened a breach unprompted.
 
 Daemons: Datamine V1/V2/V3 (80/180/350 €$), Icepick (−20% tower cost, once), Mass Vulnerability
 (+35% damage next wave), Blackwall ICE (runners can't hack next wave; rare), Overclock (+50% fire

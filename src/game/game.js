@@ -57,6 +57,7 @@ export class Game {
     this.hintsShown = new Set();
     this.ui.onDistrictStart();
     this.hint('build', 'Tap a tower below, then tap an empty cell to build.');
+    setTimeout(() => { if (this.state === 'play') this.ui.maybeBreachIntro?.(); }, 2500);
   }
 
   hint(id, msg) {

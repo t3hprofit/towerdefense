@@ -189,6 +189,19 @@ button { font-family: inherit; color: inherit; }
 .breach .bf .btn { flex: 1; }
 .breach .msg { text-align: center; min-height: 20px; font-size: 12px; color: var(--dim); letter-spacing: 0.1em; }
 
+/* ---------- Intro cards (one-time explainers) ---------- */
+.intro { margin: auto; width: 100%; max-width: 380px; border: 1px solid var(--pink); background: rgba(10,8,20,0.97); box-shadow: 0 0 30px rgba(255,42,109,0.35); padding: 18px 18px 16px; display: flex; flex-direction: column; gap: 12px; }
+.intro h2 { margin: 0; color: var(--pink); letter-spacing: 0.25em; font-size: 18px; }
+.intro .kicker { font-size: 11px; letter-spacing: 0.2em; color: var(--yellow); }
+.intro p { margin: 0; font-size: 14px; line-height: 1.45; color: #d8d8ee; }
+.intro ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; color: #c8c8e0; }
+.intro ul b { color: var(--cyan); }
+.intro .mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; max-width: 180px; margin: 2px auto; }
+.intro .mini span { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--yellow); border: 1px solid rgba(252,238,10,0.4); background: rgba(252,238,10,0.08); text-align: center; padding: 4px 0; }
+.intro .mini span.hl { background: rgba(0,240,255,0.25); border-color: var(--cyan); color: #fff; }
+.intro .acts { display: flex; gap: 8px; margin-top: 4px; }
+.intro .acts .btn { flex: 1; }
+
 /* ---------- Result ---------- */
 .result { margin: auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 380px; width: 100%; }
 .result h1 { margin: 0; font-size: 44px; letter-spacing: 0.15em; line-height: 1; }

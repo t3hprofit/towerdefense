@@ -15,7 +15,7 @@ export class UI {
   constructor() {
     this.game = null; this.tab = 'build'; this.breachEl = $('#screen-breach'); this.lastHud = {};
     this.els = { tip: $('#tip'), top: $('#hud-top'), bottom: $('#hud-bottom'), panel: $('#panel'), toasts: $('#toasts'), trayBuild: $('#tray-build'), trayHacks: $('#tray-hacks'), waveInfo: $('#wave-info'), btnWave: $('#btn-wave'), btnBreach: $('#btn-breach'), btnSpeed: $('#btn-speed'), btnPause: $('#btn-pause') };
-    this.screens = { menu: $('#screen-menu'), districts: $('#screen-districts'), howto: $('#screen-howto'), breach: $('#screen-breach'), result: $('#screen-result'), pause: $('#screen-pause') };
+    this.screens = { menu: $('#screen-menu'), districts: $('#screen-districts'), howto: $('#screen-howto'), breach: $('#screen-breach'), result: $('#screen-result'), pause: $('#screen-pause'), intro: $('#screen-intro') };
   }
   bind(game, onQuit) {
     this.game = game; this.onQuit = onQuit;
@@ -196,6 +196,30 @@ export class UI {
     this.els.toasts.appendChild(el);
     while (this.els.toasts.children.length > 2) this.els.toasts.firstChild.remove();
     setTimeout(() => el.classList.add('fade'), ms); setTimeout(() => el.remove(), ms + 450);
+  }
+
+  // ---------- One-time intro cards ----------
+  // Pauses the sim while open (no pause overlay), then runs onPrimary / onSecondary.
+  showIntro({ kicker, title, html, primary, secondary, onPrimary, onSecondary }) {
+    const g = this.game; const el = this.screens.intro; g.paused = true;
+    el.innerHTML = `<div class="intro"><div class="kicker">${kicker}</div><h2>${title}</h2>${html}<div class="acts"><button class="btn" id="i-sec">${secondary}</button><button class="btn pink primary" id="i-pri">${primary}</button></div></div>`;
+    el.classList.remove('hidden');
+    const close = () => { el.classList.add('hidden'); el.innerHTML = ''; g.paused = false; };
+    el.querySelector('#i-pri').onclick = () => { Audio.play('bselect'); close(); if (onPrimary) onPrimary(); };
+    el.querySelector('#i-sec').onclick = () => { Audio.play('blip'); close(); if (onSecondary) onSecondary(); };
+  }
+  maybeBreachIntro() {
+    const g = this.game; if (Save.data.settings.breachIntro || !g.canBreach()) return;
+    Save.setSetting('breachIntro', true);
+    this.showIntro({
+      kicker: 'NEW: HACKING MINIGAME', title: 'BREACH PROTOCOL',
+      html: `<p>Hack the district net for <b style="color:var(--yellow)">daemons</b>: free eddies, cheaper towers, weaker enemies, firewalls against netrunners.</p>
+        <div class="mini"><span class="hl">BD</span><span>1C</span><span>55</span><span>E9</span><span>7A</span><span class="hl">55</span><span>FF</span><span>BD</span><span>E9</span><span class="hl">1C</span><span>BD</span><span>55</span></div>
+        <ul><li>Pick a code in the <b>top row</b>, then alternate <b>column</b> and <b>row</b>.</li><li>Match the sequences shown below the matrix.</li><li>The timer only starts on your first pick. The wave clock gets +10s.</li></ul>
+        <p>You have <b style="color:var(--pink)">1 charge</b> now and earn more every 3 waves.</p>`,
+      primary: 'JACK IN NOW', secondary: 'LATER',
+      onPrimary: () => g.openBreach(),
+    });
   }
 
   // ---------- Breach Protocol ----------

@@ -85,6 +85,7 @@ and `NODE_PATH="$(npm root -g)"`.
 | `node tools/hackcount.mjs [tier]` | How many towers enemy runners knock offline per district against a bot that never purges. |
 | `NODE_PATH=… node tools/smoke.mjs` | Browser end-to-end: menu → build → wave → quickhack → breach → access point → 5 waves. Must end `ERRORS: none`. Screenshots in `tools/shots/`. |
 | `NODE_PATH=… node tools/score-test.mjs` | Scoring and session-state checks (HUD, sessionStorage, reload, best score, fallback). All lines `PASS`. |
+| `NODE_PATH=… node tools/intro-test.mjs` | The one-time Breach Protocol intro card shows, pauses, opens the breach, and does not repeat. |
 | `NODE_PATH=… node tools/capture-themes.mjs` | One mid-wave screenshot per district in `tools/shots/themes/`. |
 | `NODE_PATH=… node tools/capture-screens.mjs` | District list, Pacifica wave, tower panel, result and pause screens in `tools/shots/screens/`. |
 | `python3 tools/make-icons.py icons` | Regenerates the PWA icons (needs Pillow). |
