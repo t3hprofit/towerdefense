@@ -113,7 +113,7 @@ export class Game {
       if (e) { this.castHack(qh, e); return; }
       // fall through to normal taps if nothing targeted
     }
-    if (this.selected?.kind !== 'hack') { const se = this.enemyNear(x, y, 0.75); if (se && se.ice) { this.ui.toast('ICE SHIELD: open QUICKHACKS, pick one, then tap this enemy', 'warn', 3200); this.ui.setTab?.('hacks'); return; } }
+    if (this.selected?.kind !== 'hack') { const se = this.enemyNear(x, y, 0.75); if (se && se.ice) { this.ui.toast('ICE SHIELD: open QUICKHACKS, pick one, then tap this enemy', 'warn', 3200); return; } }
     const ap = this.apAt(c, r);
     if (ap) { this.selectedTower = null; this.ui.openApPanel(ap); return; }
     const t = this.towerAt(c, r);
@@ -343,7 +343,7 @@ export class Game {
       tags: def.tags, boss: !!def.boss, hacker: def.hacker || null, regen: def.regen || 0, route, routeIdx: ri, dist: 0, x: p.x, y: p.y, ang: p.ang,
       burn: 0, burnDps: 0, blind: 0, stun: 0, contagion: 0, contagionDps: 0, spreadTick: 0, slowMul: 1, hacks: [], hitFlash: 0, dead: false, t: 0,
       ice: !!s.ice, iceRegen: 0 });
-    if (s.ice && !this.hintsShown.has('ice')) { this.hint('ice', 'ICE SHIELD: towers do almost nothing to it. Pick a QUICKHACK below and tap the shielded enemy.'); this.ui.setTab?.('hacks'); }
+    if (s.ice && !this.hintsShown.has('ice')) { this.hint('ice', 'ICE SHIELD: towers do almost nothing to it. Pick a QUICKHACK below and tap the shielded enemy.'); }
     if (def.boss) { this.ui.toast(`${def.name} · ${def.title}`, 'warn', 3000); this.shake = 0.6; }
   }
   updateEnemies(dt) {
