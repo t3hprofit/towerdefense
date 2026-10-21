@@ -13,13 +13,14 @@ body { position: fixed; inset: 0; touch-action: none; }
 button { font-family: inherit; color: inherit; }
 .hidden { display: none !important; }
 
-#app { position: absolute; inset: 0; display: flex; flex-direction: column; padding-left: var(--sal); padding-right: var(--sar); }
+#app { position: absolute; inset: 0; display: flex; flex-direction: column; padding-top: var(--sat); padding-left: var(--sal); padding-right: var(--sar); }
 #field { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 #game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 
 /* ---------- HUD ---------- */
 .hud { flex: 0 0 auto; background: linear-gradient(180deg, rgba(8,8,18,0.98), rgba(8,8,18,0.92)); border-bottom: 1px solid var(--line); z-index: 5; }
-#hud-top { order: -1; display: flex; align-items: center; gap: 6px; padding: calc(6px + var(--sat)) 8px 6px; font-size: 14px; }
+/* Stats bar sits under the map, above the trays, so eddies / core / RAM are next to the controls. */
+#hud-top { order: 0; display: flex; align-items: center; gap: 6px; padding: 5px 8px; font-size: 14px; border-top: 1px solid var(--line); border-bottom: none; }
 #hud-bottom { position: relative; border-top: 1px solid var(--line); border-bottom: none; padding: 6px 8px calc(6px + var(--sab)); }
 .stat { display: flex; flex-direction: column; line-height: 1; min-width: 34px; }
 .stat .lbl { font-size: 9px; letter-spacing: 0.15em; color: var(--dim); }
