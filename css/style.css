@@ -141,6 +141,12 @@ button { font-family: inherit; color: inherit; }
 .panel.offline { border-color: var(--red); box-shadow: 0 0 20px rgba(255,59,59,0.35); }
 .panel.ap { border-color: var(--purple); box-shadow: 0 0 20px rgba(177,76,255,0.35); }
 
+/* ---------- Selection tip (anchored above the tray) ---------- */
+.tip { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 11; pointer-events: none; background: rgba(6,6,14,0.92); border: 1px solid var(--c, var(--cyan)); border-left-width: 4px; padding: 6px 10px; font-size: 12px; line-height: 1.25; color: #d0d0e8; }
+.tip b { color: var(--c, var(--cyan)); letter-spacing: 0.1em; }
+.tip .tc { color: var(--yellow); font-weight: 700; margin-left: 6px; }
+.tip .tc.ram { color: var(--cyan); }
+
 /* ---------- Toasts ---------- */
 #toasts { position: absolute; top: 10px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 8; }
 .toast { background: rgba(6,6,14,0.9); border: 1px solid var(--cyan); color: var(--cyan); padding: 6px 14px; font-size: 13px; letter-spacing: 0.1em; font-weight: 700; animation: toastIn 0.25s ease-out; max-width: 92%; text-align: center; }
