@@ -68,6 +68,8 @@ export class Game {
   }
 
   // ---------------- Helpers ----------------
+  // Analytics event with the run context every event carries.
+  trackRun(name, params = {}) { track(name, { district: this.district.id, tier: this.tier.id, wave: this.wave, ...params }); }
   cellKey(c, r) { return c + ',' + r; }
   inGrid(c, r) { return c >= 0 && c < this.cols && r >= 0 && r < this.rows; }
   towerAt(c, r) { return this.towers.find(t => t.c === c && t.r === r); }
@@ -140,7 +142,7 @@ export class Game {
     const def = TOWERS[id];
     const t = { id: ++this.rngId, type: id, c, r, x: c + 0.5, y: r + 0.5, level: 0, stats: { ...def.levels[0] }, cooldown: 0, offline: 0, angle: -Math.PI / 2, kills: 0, spent: cost, flameTick: 0, hackers: 0, pulse: 0 };
     this.towers.push(t); this.stats.built++;
-    Audio.play('build'); this.burst(t.x, t.y, def.color, 14, 2.2);
+    Audio.play('build'); this.burst(t.x, t.y, def.color, 14, 2.2); this.trackRun('tower_build', { tower: id, cost });
     this.ui.refreshTrays();
     if (this.towers.length === 2) this.hint('wave', 'Press START WAVE when ready. Enemies follow the glowing road.');
   }
@@ -149,11 +151,13 @@ export class Game {
     const cost = this.towerCost(t.type, t.level + 1);
     if (this.eddies < cost) { this.ui.toast('Not enough eddies', 'warn'); Audio.play('deny'); return; }
     this.eddies -= cost; t.level++; t.stats = { ...TOWERS[t.type].levels[t.level] }; t.spent += cost;
+    this.trackRun('tower_upgrade', { tower: t.type, level: t.level + 1, cost });
     Audio.play('upgrade'); this.burst(t.x, t.y, '#fcee0a', 18, 2.6); this.ui.openTowerPanel(t); this.ui.refreshTrays();
   }
   sell(t) {
     const val = Math.round(t.spent * SELL_RATIO);
     this.eddies += val; this.towers.splice(this.towers.indexOf(t), 1);
+    this.trackRun('tower_sell', { tower: t.type, level: t.level + 1, refund: val });
     this.text(t.x, t.y, `+€$${val}`, '#fcee0a'); Audio.play('sell'); this.selectedTower = null; this.ui.closePanel(); this.ui.refreshTrays();
   }
   purge(t) {
@@ -161,6 +165,7 @@ export class Game {
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
     this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; this.stats.purges++; this.addScore(SCORE_PURGE);
     for (const e of this.enemies) if (e.hacks) e.hacks = e.hacks.filter(h => h.tower !== t);
+    this.trackRun('purge', { tower: t.type });
     Audio.play('purge'); this.burst(t.x, t.y, '#b14cff', 16, 2.4); this.text(t.x, t.y, 'PURGED', '#b14cff');
     this.ui.closePanel(); this.ui.refreshTrays();
   }
@@ -169,6 +174,7 @@ export class Game {
   castHack(qh, e) {
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
     this.ram -= qh.cost; this.stats.hacks++;
+    this.trackRun('quickhack', { hack: qh.id, enemy: e.type, boss: !!e.boss, broke_ice: !!e.ice });
     if (e.ice) { e.ice = false; e.iceRegen = this.tier.bossRegen; this.addScore(SCORE_ICE); this.text(e.x, e.y - 0.7, 'ICE BROKEN', '#00f0ff', 1.2);
       if (this.tier.iceRefund) { this.ram = Math.min(this.ramMax, this.ram + this.tier.iceRefund); this.text(e.x, e.y - 1.1, `+${this.tier.iceRefund} RAM`, '#00f0ff', 0.9); } this.ring(e.x, e.y, 0.9, '#00f0ff'); Audio.play('purge'); }
     const organic = e.tags.includes('organic'), mech = e.tags.includes('mech') || e.tags.includes('drone');
@@ -222,7 +228,8 @@ export class Game {
   }
   finishBreach() {
     const done = this.breach ? this.breach.completed() : [];
-    for (const d of done) this.applyDaemon(d.id);
+    for (const d of done) { this.applyDaemon(d.id); this.trackRun('daemon_upload', { daemon: d.id }); }
+    this.trackRun('breach_end', { daemons: done.length });
     this.breach = null; this.state = 'play';
     this.ui.hideBreach(done); this.ui.refreshTrays();
     if (done.length) Audio.play('daemon'); else Audio.play('fail');
