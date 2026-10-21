@@ -11,6 +11,7 @@ import { makeRng, hashStr } from '../core/rng.js';
 import { Audio } from '../core/audio.js';
 import { Save } from '../core/save.js';
 import { Session } from '../core/session.js';
+import { track } from '../core/analytics.js';
 import { tierById } from '../data/tiers.js';
 
 const RAM_BASE = 12, RAM_REGEN = 0.45;
@@ -54,6 +55,7 @@ export class Game {
     this.nextWave = generateWave(district, 1, this.tier.id);
     this.lastKillT = -Infinity; this.waveLeaked = false; this.waveTimer = PREP_FIRST; this.bossLeaked = null;
     Session.beginRun(district.id);
+    track('district_start', { district: district.id, tier: this.tier.id });
     this.hintsShown = new Set();
     this.ui.onDistrictStart();
     this.hint('build', 'Tap a tower below, then tap an empty cell to build.');
@@ -253,6 +255,7 @@ export class Game {
     const w = this.nextWave; this.spawnList = scheduleWave(w); this.currentWave = w;
     this.selectedTower = null; this.ui.closePanel();
     Audio.play(w.boss ? 'boss' : 'wave');
+    track('wave_start', { district: this.district.id, tier: this.tier.id, wave: this.wave, boss: !!w.boss });
     this.ui.toast(w.boss ? `BOSS WAVE · ${ENEMIES[this.district.boss].name}` : `WAVE ${this.wave}`, w.boss ? 'warn' : 'default');
     this.ui.refreshTrays();
   }
@@ -293,6 +296,7 @@ export class Game {
     const score = won ? Session.state.runScore : Math.round(Session.state.runScore * 0.5); const prevBest = Save.district(this.district.id, this.tier.id).bestScore || 0;
     Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score, tier: this.tier.id });
     const extra = { score, best: Math.max(prevBest, score), newBest: score > prevBest, total: Session.state.sessionScore, bestCombo: Session.state.bestCombo };
+    track('district_end', { district: this.district.id, tier: this.tier.id, won, wave: this.wave, stars, lives: this.lives, score });
     Audio.play(won ? 'win' : 'lose');
     this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives, bossLeaked: this.bossLeaked, ...extra });
   }
