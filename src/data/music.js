@@ -11,7 +11,7 @@
 //     bass    16-char pattern per bar, repeated: '1' root '3' third '5' fifth '7' flat 7th
 //             '8' octave, '.' rest, '_' hold the previous note one more step.
 //     arp     chord-tone indices cycled one per step (0 root, 1 third, 2 fifth, 3 octave,
-//             4 third+8ve, 5 fifth+8ve); null = no arp. Length need not divide 16 (polymeter).
+//             4 third+8ve, 5 fifth+8ve, -1 rest); null = no arp. Length need not divide 16 (polymeter).
 //     arpFollow  false = arp stays on the section's first chord while the bass moves (the
 //             original Watson sound). Default true.
 //     arpShift   semitones added to the arp (the original tune jumps +7 every other segment).
@@ -43,11 +43,21 @@ const WATSON_SECTIONS = {
 };
 
 export const SONGS = {
-  // Main menu and district select: the Watson theme without drums.
+  // Title theme (main menu and district select): slow E minor, a pad under a bell arpeggio in
+  // eighths, no drums, and a brass lead that only enters on the second pass.
   menu: {
-    bpm: 107, root: 55, voices: { bass: 'fatbass', arp: 'bell', lead: 'supersaw' },
-    sections: { I: WATSON_SECTIONS.I, B: { ...WATSON_SECTIONS.B, drums: null }, D: { ...WATSON_SECTIONS.D, drums: null } },
-    order: ['I', 'B', 'I', 'D'], loopFrom: 0,
+    bpm: 96, root: 82.41, voices: { bass: 'pad', arp: 'bell', lead: 'brass' },
+    sections: {
+      A: { chords: [[0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [3, 'M'], [3, 'M'], [-2, 'M'], [-2, 'M']],
+        bass: '1_______1_______', arp: [0, -1, 2, -1, 3, -1, 5, -1], drums: null },
+      B: { chords: [[0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [3, 'M'], [3, 'M'], [-2, 'M'], [-2, 'M']],
+        bass: '1_______1_______', arp: [0, -1, 2, -1, 3, -1, 5, -1], drums: null,
+        lead: '7:6 8:2 7:4 3:4  5:4 3:2 5:2 7:8  10:4 12:2 10:2 7:4 5:4  3:4 5:2 3:2 2:8' },
+      C: { chords: [[-7, 'm'], [-7, 'm'], [0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [-5, 'M'], [-5, 'M']],
+        bass: '1_______1_______', arp: [0, -1, 3, -1, 2, -1, 5, -1], drums: null,
+        lead: '12:4 10:2 8:2 7:4 5:4  3:4 7:2 3:2 0:8  8:4 7:2 8:2 10:4 12:4  11:4 7:4 11:2 14:2 7:4' },
+    },
+    order: ['A', 'B', 'A', 'C', 'B'], loopFrom: 0,
   },
   // Watson: the original A minor loop, grown into a full tune.
   watson: {
@@ -181,7 +191,8 @@ export function compileSong(song) {
       let bass = null; const bc = sec.bass[i];
       if (bc !== '.' && bc !== '_') { let len = 1; while (i + len < 16 && sec.bass[i + len] === '_') len++; bass = { semi: cRoot + (bc === '3' ? tones[1] : BASS_DEG[bc]), len }; }
       let arp = null;
-      if (sec.arp) { const [aRoot, aq] = sec.arpFollow === false ? sec.chords[0] : [cRoot, q]; arp = aRoot + CHORD_TONES[aq][sec.arp[s % sec.arp.length]] + 24 + (sec.arpShift || 0); }
+      const ai = sec.arp ? sec.arp[s % sec.arp.length] : -1;
+      if (ai >= 0) { const [aRoot, aq] = sec.arpFollow === false ? sec.chords[0] : [cRoot, q]; arp = aRoot + CHORD_TONES[aq][ai] + 24 + (sec.arpShift || 0); }
       steps.push({ bass, arp, lead: leadAt[s] || null, drum: sec.drums ? sec.drums[i] : '.' });
     }
   });

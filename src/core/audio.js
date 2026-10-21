@@ -20,6 +20,7 @@ const PATCHES = {
   epiano:   { oscs: [{ type: 'sine', fm: { ratio: 1, index: 1.5, decay: 0.3 } }, { type: 'sine', semi: 12, gain: 0.2 }], env: { a: 0.005, d: 0.4, s: 0.3, r: 0.15 }, gain: 0.8, send: 0.3 },
   pluck:    { oscs: [{ type: 'triangle' }, { type: 'triangle', semi: 12, gain: 0.4 }], filter: { f0: 5000, f1: 1200, q: 1, ft: 0.3 }, env: { a: 0.003, d: 0.45, s: 0, r: 0.05 }, gain: 2.0, send: 0.3 },
   supersaw: { oscs: [{ type: 'sawtooth', detune: -12 }, { type: 'sawtooth' }, { type: 'sawtooth', detune: 12 }], filter: { f0: 3500, f1: 1800, q: 1, ft: 0.3 }, env: { a: 0.02, d: 0.2, s: 0.7, r: 0.12 }, gain: 0.55, send: 0.3 },
+  pad:      { oscs: [{ type: 'sawtooth', detune: -8 }, { type: 'sawtooth', detune: 8, gain: 0.8 }, { type: 'square', semi: -12, gain: 0.3 }], filter: { f0: 500, f1: 1400, q: 1, ft: 1.2 }, env: { a: 0.4, d: 0.5, s: 0.8, r: 0.6 }, gain: 0.9 },
   brass:    { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 6, gain: 0.6 }], filter: { f0: 400, f1: 2600, q: 2, ft: 0.12 }, env: { a: 0.03, d: 0.1, s: 0.8, r: 0.08 }, gain: 0.7, send: 0.25 },
 };
 class AudioEngine {

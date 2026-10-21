@@ -43,9 +43,11 @@ canvas.addEventListener('pointerup', (e) => {
 canvas.addEventListener('pointercancel', () => { downPos = null; });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());
-// iOS: unlock audio on the first real activation (touchend/click), enable :active styles.
-document.addEventListener('touchend', () => Audio.init(), { capture: true, passive: true });
-document.addEventListener('click', () => Audio.init(), { capture: true });
+// iOS: unlock audio on the first real activation (touchend/click), enable :active styles. Browsers
+// allow no sound before a gesture, so the title music also starts here, on the first tap anywhere.
+const unlock = () => { Audio.init(); Audio.startMusic(); };
+document.addEventListener('touchend', unlock, { capture: true, passive: true });
+document.addEventListener('click', unlock, { capture: true });
 document.addEventListener('touchstart', () => {}, { passive: true });
 // Landscape guard: pause while the rotate overlay is showing.
 const landscapeMq = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
