@@ -95,7 +95,7 @@ export class UI {
     for (const b of this.els.trayHacks.children) {
       const id = b.dataset.id; b.classList.toggle('sel', g.selected?.kind === 'hack' && g.selected.id === id); b.classList.toggle('poor', g.ram < QUICKHACKS[id].cost);
     }
-    this.els.btnBreach.disabled = !g.canBreach();
+    this.els.btnBreach.disabled = !g.canBreach(); this.els.btnBreach.textContent = `BREACH (${g.breachCharges})`;
     this.els.btnWave.disabled = g.waveActive || g.wave >= g.district.waves;
     this.els.btnWave.textContent = g.wave === 0 ? 'START WAVE' : g.waveActive ? 'IN PROGRESS' : 'NEXT WAVE';
     this.els.waveInfo.innerHTML = g.waveInfoText();

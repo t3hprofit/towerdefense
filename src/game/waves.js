@@ -2,12 +2,15 @@ import { ENEMIES } from '../data/enemies.js';
 import { makeRng, hashStr } from '../core/rng.js';
 
 // Deterministic wave composition: same district + wave always produces the same spawn script.
+// Tunables (overridable from the balance sim via globalThis.__NCB_TUNE).
+const T = () => globalThis.__NCB_TUNE || {};
+
 export function generateWave(district, wave) {
   const rng = makeRng(hashStr(district.id + ':' + wave));
   const isBoss = wave === district.waves;
-  const diff = district.difficulty;
-  const budget = Math.round((9 + 6.5 * (wave - 1)) * (0.75 + 0.25 * diff) * (isBoss ? 0.6 : 1));
-  const hpMult = diff * (1 + 0.16 * (wave - 1));
+  const diff = (T().diffs?.[district.id] ?? district.difficulty) * (T().diffScale ?? 1);
+  const budget = Math.round((9 + (T().budgetRamp ?? 4.5) * (wave - 1)) * (0.75 + 0.25 * diff) * (isBoss ? 0.6 : 1));
+  const hpMult = diff * (1 + (T().hpRamp ?? 0.3) * (wave - 1));
   const roster = district.roster.filter(e => e.from <= wave);
   const groups = [];
   let left = budget; let guard = 0;
@@ -24,7 +27,7 @@ export function generateWave(district, wave) {
   if (isBoss) {
     groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: diff * 0.75, boss: true });
   }
-  return { wave, groups, boss: isBoss, bonus: 60 + 22 * wave };
+  return { wave, groups, boss: isBoss, bonus: 40 + 12 * wave };
 }
 
 // Flatten groups into a timed spawn list.

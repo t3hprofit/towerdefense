@@ -1,5 +1,7 @@
 // Headless balance simulator: a simple bot plays each district. Reports lives after each wave.
-import { Game } from '../src/game/game.js';
+if (process.env.TUNE) globalThis.__NCB_TUNE = JSON.parse(process.env.TUNE);
+if (process.env.START) { const { DISTRICTS: DS } = await import('../src/data/districts.js'); const st = JSON.parse(process.env.START); for (const d of DS) if (st[d.id]) d.startEddies = st[d.id]; }
+const { Game } = await import('../src/game/game.js');
 import { DISTRICTS } from '../src/data/districts.js';
 import { TOWERS } from '../src/data/towers.js';
 import { QUICKHACKS } from '../src/data/quickhacks.js';
@@ -9,7 +11,7 @@ const ui = { onDistrictStart: noop, toast: noop, closePanel: noop, refreshTrays:
 const mode = process.argv[2] || 'basic';
 const only = process.argv[3];
 
-function coverage(g, c, r, range) { let n = 0; for (const rt of g.routes) for (const [pc, pr] of rt.cellList) if (Math.hypot(pc - c, pr - r) <= range) n++; return n; }
+function coverage(g, c, r, range) { let n = 0; const routes = g.district.routeMode === 'all' ? g.routes : [g.routes[g.activeRoute]]; for (const rt of routes) for (const [pc, pr] of rt.cellList) if (Math.hypot(pc - c, pr - r) <= range) n++; return n; }
 function bestCell(g, range) {
   let best = null, bs = -1;
   for (let c = 0; c < g.cols; c++) for (let r = 0; r < g.rows; r++) {

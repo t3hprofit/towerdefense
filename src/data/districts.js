@@ -6,14 +6,14 @@ export const DISTRICTS = [
   {
     id: 'watson', num: 1, name: 'WATSON', sub: 'Kabuki · Northside', color: '#00f0ff', accent: '#ff2a6d',
     desc: 'Scav chop-shops and Maelstrom bikers. A good place to learn which end of the turret points at the enemy.',
-    difficulty: 1.0, waves: 10, startEddies: 320, routeMode: 'switch',
+    difficulty: 1.45, waves: 10, startEddies: 280, routeMode: 'switch',
     routes: [
-      [[-1,1],[6,1],[6,4],[2,4],[2,7],[7,7],[7,10],[1,10],[1,14]],
+      [[-1,1],[6,1],[6,5],[2,5],[2,9],[6,9],[6,14]],
     ],
-    blocked: [[8,0],[8,1],[0,5],[0,6],[8,12],[8,13],[4,0],[5,12],[6,12]],
+    blocked: [[8,0],[8,1],[0,5],[0,6],[8,12],[8,13],[4,0],[4,12],[8,7]],
     accessPoints: [
       { id: 'trap1', type: 'TRAP', c: 4, r: 3, name: 'VENDING MACHINE', radius: 2.0, dmg: 140, cost: 5, cooldown: 30 },
-      { id: 'door1', type: 'DOOR', c: 7, r: 8, name: 'SERVICE GATE', duration: 4, cost: 3, cooldown: 24 },
+      { id: 'door1', type: 'DOOR', c: 2, r: 7, name: 'SERVICE GATE', duration: 4, cost: 3, cooldown: 24 },
     ],
     roster: [
       { type: 'scav', from: 1, weight: 5 }, { type: 'maelstrom', from: 3, weight: 2 },
@@ -25,7 +25,7 @@ export const DISTRICTS = [
   {
     id: 'westbrook', num: 2, name: 'WESTBROOK', sub: 'Japantown · Charter Hill', color: '#fcee0a', accent: '#ff2a6d',
     desc: 'Tyger Claws move fast. The traffic control node can send them the long way around the pagoda.',
-    difficulty: 1.2, waves: 10, startEddies: 340, routeMode: 'switch',
+    difficulty: 0.95, waves: 10, startEddies: 340, routeMode: 'switch',
     routes: [
       [[4,-1],[4,2],[7,2],[7,9],[4,9],[4,14]],
       [[4,-1],[4,2],[1,2],[1,6],[6,6],[6,8],[1,8],[1,12],[4,12],[4,14]],
@@ -44,7 +44,7 @@ export const DISTRICTS = [
   {
     id: 'heywood', num: 3, name: 'HEYWOOD', sub: 'Vista del Rey · The Glen', color: '#ff8c1a', accent: '#fcee0a',
     desc: 'Valentinos and 6th Street trade bullets in the barrio. Heavies and trucks shrug off small arms.',
-    difficulty: 1.4, waves: 10, startEddies: 400, routeMode: 'switch',
+    difficulty: 1.15, waves: 10, startEddies: 380, routeMode: 'switch',
     routes: [
       [[9,1],[2,1],[2,4],[6,4],[6,7],[2,7],[2,10],[6,10],[6,14]],
     ],
@@ -63,7 +63,7 @@ export const DISTRICTS = [
   {
     id: 'santo', num: 4, name: 'SANTO DOMINGO', sub: 'Arroyo · Rancho Coronado', color: '#39ff14', accent: '#ff8c1a',
     desc: 'Militech is field-testing mechs in the factory district. Two entrances, one exit. Arc Nodes earn their keep.',
-    difficulty: 1.65, waves: 10, startEddies: 460, routeMode: 'all',
+    difficulty: 1.25, waves: 10, startEddies: 420, routeMode: 'all',
     routes: [
       [[-1,3],[3,3],[3,9],[8,9],[8,12],[4,12],[4,14]],
       [[9,3],[5,3],[5,9],[8,9],[8,12],[4,12],[4,14]],
@@ -83,7 +83,7 @@ export const DISTRICTS = [
   {
     id: 'pacifica', num: 5, name: 'PACIFICA', sub: 'Coastview · Grand Imperial Mall', color: '#b14cff', accent: '#00f0ff',
     desc: 'Voodoo Boys own the net here. Their netrunners will strip your towers offline unless you bring ICE.',
-    difficulty: 1.75, waves: 10, startEddies: 560, routeMode: 'switch',
+    difficulty: 1.0, waves: 10, startEddies: 480, routeMode: 'switch',
     routes: [
       [[4,-1],[4,4],[1,4],[1,10],[7,10],[7,14]],
       [[4,-1],[4,4],[7,4],[7,7],[2,7],[2,12],[7,12],[7,14]],
@@ -103,7 +103,7 @@ export const DISTRICTS = [
   {
     id: 'center', num: 6, name: 'CITY CENTER', sub: 'Corpo Plaza · Arasaka Tower', color: '#ff2a6d', accent: '#fcee0a',
     desc: 'Arasaka wants its tower back. Troopers, runners, mechs, and the one they call Smasher.',
-    difficulty: 2.2, waves: 10, startEddies: 640, routeMode: 'all',
+    difficulty: 1.0, waves: 10, startEddies: 540, routeMode: 'all',
     routes: [
       [[-1,1],[4,1],[4,6],[1,6],[1,12],[4,12],[4,14]],
       [[9,1],[6,1],[6,6],[4,6],[1,6],[1,12],[4,12],[4,14]],

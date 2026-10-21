@@ -13,6 +13,9 @@ import { Save } from '../core/save.js';
 import { Session } from '../core/session.js';
 
 const RAM_BASE = 12, RAM_REGEN = 0.45;
+// Economy: fraction of listed enemy reward actually paid out. Breach charges are earned every BREACH_EVERY waves.
+const TUNE = () => globalThis.__NCB_TUNE || {};
+const ECON = () => TUNE().econ ?? 0.6, REWARD_DECAY = () => TUNE().rewardDecay ?? 0.1, BREACH_EVERY = 3;
 // Scoring
 const COMBO_WINDOW = 1.5, COMBO_CAP = 25, MULT_CAP = 3.5, BOSS_KILL_BONUS = 5000;
 const SCORE_KILL = 10, SCORE_WAVE = 500, SCORE_CLEAN_WAVE = 250, SCORE_DAEMON = 300, SCORE_AP = 100, SCORE_PURGE = 50, SCORE_LIFE = 200;
@@ -36,7 +39,7 @@ export class Game {
     this.towers = []; this.enemies = []; this.projectiles = []; this.particles = []; this.texts = []; this.zaps = [];
     this.eddies = district.startEddies; this.lives = 20; this.ramMax = RAM_BASE; this.ram = RAM_BASE;
     this.wave = 0; this.waveActive = false; this.spawnList = []; this.waveTime = 0; this.waveWon = false;
-    this.breachAvailable = true; this.breach = null; this.breachUsedThisWave = false;
+    this.breachCharges = 1; this.breach = null;
     this.fx = { icepick: false, massvuln: 0, blackwall: 0, overclock: 0, bounty: 0 };
     this.uploadedOnce = new Set();
     this.selected = null; this.selectedTower = null; this.hoverCell = null;
@@ -193,13 +196,13 @@ export class Game {
   }
 
   // ---------------- Breach ----------------
-  canBreach() { return this.state === 'play' && !this.paused && !this.waveActive && this.breachAvailable; }
+  canBreach() { return this.state === 'play' && !this.paused && !this.waveActive && this.breachCharges > 0; }
   openBreach() {
     if (!this.canBreach()) return;
     const rng = makeRng(hashStr(this.district.id + ':breach:' + this.wave + ':' + Date.now()));
     const size = this.district.num >= 4 ? 6 : 5;
     this.breach = new Breach({ size, bufferLen: size === 6 ? 8 : 7, rng, daemonPool: daemonPoolFor(this), seconds: TIMING.breachSeconds - (this.district.num - 1) * 2 });
-    this.breachAvailable = false; this.stats.breaches++;
+    this.breachCharges--; this.stats.breaches++;
     this.state = 'breach'; this.ui.showBreach(this.breach);
   }
   finishBreach() {
@@ -212,9 +215,9 @@ export class Game {
   applyDaemon(id) {
     this.stats.daemons++; Session.add(SCORE_DAEMON); if (DAEMONS[id].once) this.uploadedOnce.add(id);
     switch (id) {
-      case 'datamine1': this.eddies += 150; break;
-      case 'datamine2': this.eddies += 400; break;
-      case 'datamine3': this.eddies += 800; break;
+      case 'datamine1': this.eddies += 100; break;
+      case 'datamine2': this.eddies += 250; break;
+      case 'datamine3': this.eddies += 500; break;
       case 'icepick': this.fx.icepick = true; break;
       case 'massvuln': this.fx.massvuln = 1; break;
       case 'blackwall': this.fx.blackwall = 2; break;
@@ -228,7 +231,7 @@ export class Game {
   // ---------------- Waves ----------------
   startWave() {
     if (this.state !== 'play' || this.paused || this.waveActive || this.wave >= this.district.waves) return;
-    this.wave++; this.waveActive = true; this.waveTime = 0; this.waveLeaked = false; this.breachAvailable = false;
+    this.wave++; this.waveActive = true; this.waveTime = 0; this.waveLeaked = false;
     const w = this.nextWave; this.spawnList = scheduleWave(w); this.currentWave = w;
     this.selectedTower = null; this.ui.closePanel();
     Audio.play(w.boss ? 'boss' : 'wave');
@@ -243,8 +246,9 @@ export class Game {
     if (this.fx.massvuln > 0) this.fx.massvuln--; if (this.fx.blackwall > 0) this.fx.blackwall--;
     if (this.fx.overclock > 0) this.fx.overclock--; if (this.fx.bounty > 0) this.fx.bounty--;
     if (this.wave >= this.district.waves) { this.finish(true); return; }
-    this.breachAvailable = true; this.nextWave = generateWave(this.district, this.wave + 1);
-    this.hint('breach', 'BREACH available: hack the local net for daemons between waves.');
+    if (this.wave % BREACH_EVERY === 0) { this.breachCharges++; this.ui.toast('BREACH CHARGE ACQUIRED', 'pink'); }
+    this.nextWave = generateWave(this.district, this.wave + 1);
+    if (this.breachCharges > 0) this.hint('breach', 'BREACH available: hack the local net for daemons between waves.');
     if (this.nextWave.groups.some(g => ENEMIES[g.type].hacker)) this.hint('runner', 'Netrunners next wave! They hack towers offline. PURGE restores them.');
     this.ui.refreshTrays();
   }
@@ -390,7 +394,7 @@ export class Game {
   }
   kill(e, src = null) {
     e.dead = true;
-    let reward = e.reward; if (this.fx.bounty > 0) reward = Math.round(reward * 1.6);
+    let reward = Math.max(1, Math.round(e.reward * ECON() / (1 + REWARD_DECAY() * (this.wave - 1)))); if (this.fx.bounty > 0) reward = Math.round(reward * 1.6);
     this.eddies += reward; this.stats.kills++;
     this.scoreKill(e);
     this.text(e.x, e.y - 0.3, `+${reward}`, '#fcee0a', e.boss ? 1.6 : 1);
