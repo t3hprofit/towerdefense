@@ -20,7 +20,9 @@ const ECON = () => TUNE().econ ?? 0.6, REWARD_DECAY = () => TUNE().rewardDecay ?
 const COMBO_WINDOW = 1.5, COMBO_CAP = 25, MULT_CAP = 3.5, BOSS_KILL_BONUS = 5000;
 const SCORE_KILL = 10, SCORE_WAVE = 500, SCORE_CLEAN_WAVE = 250, SCORE_DAEMON = 300, SCORE_AP = 100, SCORE_PURGE = 50, SCORE_LIFE = 200, SCORE_ICE = 150;
 // ICE shields: tower damage multiplier while shielded, Arc Node multiplier, boss shield regen delay.
-const ICE_TOWER_MUL = 0.2, ICE_TESLA_MUL = 0.5, ICE_REGEN = 12;
+const ICE_TOWER_MUL = 0.2, ICE_TESLA_MUL = 0.5, ICE_BOSS_MUL = 0.1, ICE_REGEN = 10;
+// Wave countdown: seconds before a wave auto-starts; breach adds time; calling early scores per second saved.
+const PREP_FIRST = 45, PREP_WAVE = 25, PREP_BOSS = 30, BREACH_BONUS_TIME = 10, SCORE_EARLY = 25;
 
 export class Game {
   constructor(ui) {
@@ -48,7 +50,7 @@ export class Game {
     this.shake = 0; this.flash = 0;
     this.stats = { kills: 0, hacks: 0, breaches: 0, daemons: 0, built: 0, leaks: 0, purges: 0, apHacks: 0 };
     this.nextWave = generateWave(district, 1);
-    this.lastKillT = -Infinity; this.waveLeaked = false;
+    this.lastKillT = -Infinity; this.waveLeaked = false; this.waveTimer = PREP_FIRST;
     Session.beginRun(district.id);
     this.hintsShown = new Set();
     this.ui.onDistrictStart();
@@ -109,6 +111,7 @@ export class Game {
       if (e) { this.castHack(qh, e); return; }
       // fall through to normal taps if nothing targeted
     }
+    if (this.selected?.kind !== 'hack') { const se = this.enemyNear(x, y, 0.75); if (se && se.ice) { this.ui.toast('ICE SHIELD: open QUICKHACKS, pick one, then tap this enemy', 'warn', 3200); this.ui.setTab?.('hacks'); return; } }
     const ap = this.apAt(c, r);
     if (ap) { this.selectedTower = null; this.ui.openApPanel(ap); return; }
     const t = this.towerAt(c, r);
@@ -206,6 +209,7 @@ export class Game {
     const size = this.district.num >= 4 ? 6 : 5;
     this.breach = new Breach({ size, bufferLen: size === 6 ? 8 : 7, rng, daemonPool: daemonPoolFor(this), seconds: TIMING.breachSeconds - (this.district.num - 1) * 2 });
     this.breachCharges--; this.stats.breaches++;
+    if (this.waveTimer !== null) { this.waveTimer += BREACH_BONUS_TIME; this.ui.toast(`+${BREACH_BONUS_TIME}s on the wave clock`, 'pink'); }
     this.state = 'breach'; this.ui.showBreach(this.breach);
   }
   finishBreach() {
@@ -234,7 +238,12 @@ export class Game {
   // ---------------- Waves ----------------
   startWave() {
     if (this.state !== 'play' || this.paused || this.waveActive || this.wave >= this.district.waves) return;
-    this.wave++; this.waveActive = true; this.waveTime = 0; this.waveLeaked = false;
+    if (this.waveTimer !== null && this.waveTimer > 1) { const early = Math.round(this.waveTimer * SCORE_EARLY); Session.add(early); this.ui.toast(`EARLY CALL +${early} score`, 'good'); }
+    this.beginWave();
+  }
+  beginWave() {
+    if (this.waveActive || this.wave >= this.district.waves) return;
+    this.waveTimer = null; this.wave++; this.waveActive = true; this.waveTime = 0; this.waveLeaked = false;
     const w = this.nextWave; this.spawnList = scheduleWave(w); this.currentWave = w;
     this.selectedTower = null; this.ui.closePanel();
     Audio.play(w.boss ? 'boss' : 'wave');
@@ -253,6 +262,7 @@ export class Game {
     this.nextWave = generateWave(this.district, this.wave + 1);
     if (this.breachCharges > 0) this.hint('breach', 'BREACH available: hack the local net for daemons between waves.');
     if (this.nextWave.groups.some(g => ENEMIES[g.type].hacker)) this.hint('runner', 'Netrunners next wave! They hack towers offline. PURGE restores them.');
+    this.waveTimer = this.nextWave.boss ? PREP_BOSS : PREP_WAVE;
     this.ui.refreshTrays();
   }
   waveInfoText() {
@@ -262,11 +272,12 @@ export class Game {
       return `<b>WAVE ${this.wave}</b> in progress · ${left} hostiles remaining`;
     }
     if (this.wave >= this.district.waves) return 'District secured.';
-    const w = this.nextWave;
-    return `<b>NEXT: WAVE ${this.wave + 1}${w.boss ? ' · BOSS' : ''}</b><br>${describeWave(w)}`;
+    const w = this.nextWave; const t = this.waveTimer !== null ? ` · auto in ${Math.ceil(this.waveTimer)}s` : '';
+    return `<b>NEXT: WAVE ${this.wave + 1}${w.boss ? ' · BOSS' : ''}</b>${t}<br>${describeWave(w)}`;
   }
   finish(won) {
     if (this.state === 'result') return;
+    if (this.state === 'breach') { this.breach = null; this.ui.hideBreach([]); }
     this.state = 'result';
     const stars = won ? (this.lives >= 18 ? 3 : this.lives >= 10 ? 2 : 1) : 0;
     const idx = DISTRICTS.indexOf(this.district); const next = DISTRICTS[idx + 1];
@@ -281,13 +292,17 @@ export class Game {
 
   // ---------------- Simulation ----------------
   update(dtReal) {
-    if (this.state === 'breach') { this.breach?.tick(dtReal); this.ui.tickBreach(this.breach); if (this.breach?.done && !this.breach.timeLeft) { /* let ui close */ } return; }
-    if (this.state !== 'play' || this.paused) return;
-    let dt = dtReal * this.speed;
-    while (dt > 0 && this.state === 'play') { const step = Math.min(dt, 1 / 60); this.step(step); dt -= step; }
+    if (this.state === 'breach') { this.breach?.tick(dtReal); this.ui.tickBreach(this.breach); }
+    if (!this.simActive() || this.paused) return;
+    // The battlefield keeps running under the breach overlay (at 1x) so a slow breach costs real time.
+    let dt = dtReal * (this.state === 'breach' ? 1 : this.speed);
+    while (dt > 0 && this.simActive()) { const step = Math.min(dt, 1 / 60); this.step(step); dt -= step; }
   }
+  simActive() { return this.state === 'play' || this.state === 'breach'; }
   step(dt) {
     this.time += dt;
+    // Wave countdown
+    if (!this.waveActive && this.waveTimer !== null) { this.waveTimer -= dt; if (this.waveTimer <= 0) { this.waveTimer = null; this.beginWave(); } }
     this.shake = Math.max(0, this.shake - dt * 2); this.flash = Math.max(0, this.flash - dt);
     // RAM regen
     let regen = RAM_REGEN; for (const t of this.towers) if (t.type === 'deck' && t.offline <= 0) regen += t.stats.ram;
@@ -308,7 +323,7 @@ export class Game {
     this.updateTowers(dt);
     this.updateProjectiles(dt);
     this.updateFx(dt);
-    if (this.lives <= 0 && this.state === 'play') { this.finish(false); return; }
+    if (this.lives <= 0 && this.simActive()) { this.finish(false); return; }
     if (this.waveActive && !this.spawnList.length && !this.enemies.length) this.endWave();
   }
   spawn(s) {
@@ -320,7 +335,7 @@ export class Game {
       tags: def.tags, boss: !!def.boss, hacker: def.hacker || null, regen: def.regen || 0, route, routeIdx: ri, dist: 0, x: p.x, y: p.y, ang: p.ang,
       burn: 0, burnDps: 0, blind: 0, stun: 0, contagion: 0, contagionDps: 0, spreadTick: 0, slowMul: 1, hacks: [], hitFlash: 0, dead: false, t: 0,
       ice: !!s.ice, iceRegen: 0 });
-    if (s.ice && !def.boss) this.hint('ice', 'ICE-shielded hostile! Towers barely scratch it until a quickhack breaks the shield.');
+    if (s.ice && !this.hintsShown.has('ice')) { this.hint('ice', 'ICE SHIELD: towers do almost nothing to it. Pick a QUICKHACK below and tap the shielded enemy.'); this.ui.setTab?.('hacks'); }
     if (def.boss) { this.ui.toast(`${def.name} · ${def.title}`, 'warn', 3000); this.shake = 0.6; }
   }
   updateEnemies(dt) {
@@ -393,7 +408,10 @@ export class Game {
     if (e.dead) return 0;
     let a = amount;
     if (!pierce) a = Math.max(amount * 0.25, amount - e.armor);
-    if (e.ice && kind !== 'hack' && kind !== 'trap') a *= kind === 'tesla' ? ICE_TESLA_MUL : ICE_TOWER_MUL;
+    if (e.ice && kind !== 'hack' && kind !== 'trap') {
+      a *= kind === 'tesla' ? ICE_TESLA_MUL : e.boss ? ICE_BOSS_MUL : ICE_TOWER_MUL;
+      if (kind !== 'dot' && this.time - (e.iceTextT || 0) > 0.8) { e.iceTextT = this.time; this.text(e.x, e.y - 0.5, 'ICE', '#00f0ff', 0.8); }
+    }
     if (this.fx.massvuln > 0) a *= 1.35;
     e.hp -= a; if (kind !== 'dot') e.hitFlash = 0.08;
     if (e.hp <= 0) this.kill(e, src);

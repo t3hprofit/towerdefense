@@ -6,7 +6,7 @@ export const DISTRICTS = [
   {
     id: 'watson', num: 1, name: 'WATSON', sub: 'Kabuki · Northside', color: '#00f0ff', accent: '#ff2a6d',
     desc: 'Scav chop-shops and Maelstrom bikers. A good place to learn which end of the turret points at the enemy.',
-    difficulty: 1.45, waves: 10, startEddies: 280, routeMode: 'switch',
+    difficulty: 1.6, waves: 10, startEddies: 280, routeMode: 'switch',
     routes: [
       [[-1,1],[6,1],[6,5],[2,5],[2,9],[6,9],[6,14]],
     ],

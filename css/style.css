@@ -44,6 +44,8 @@ button { font-family: inherit; color: inherit; }
 .tabs { display: flex; gap: 6px; margin-bottom: 6px; }
 .tab { flex: 1; height: 36px; border: 1px solid var(--line); background: transparent; color: var(--dim); font-weight: 700; letter-spacing: 0.1em; font-size: 12px; }
 .tab.active { color: var(--cyan); background: rgba(0,240,255,0.12); border-color: var(--cyan); }
+.tab.alert:not(.active) { color: var(--cyan); border-color: var(--cyan); animation: pulseCyan 0.9s infinite; }
+@keyframes pulseCyan { 50% { background: rgba(0,240,255,0.25); box-shadow: 0 0 12px rgba(0,240,255,0.6); } }
 .tab.breach { color: var(--pink); border-color: rgba(255,42,109,0.4); }
 .tab.breach:disabled { opacity: 0.35; }
 .tab.breach:not(:disabled) { animation: pulsePink 1.2s infinite; background: rgba(255,42,109,0.12); }

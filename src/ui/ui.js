@@ -97,7 +97,8 @@ export class UI {
     }
     this.els.btnBreach.disabled = !g.canBreach(); this.els.btnBreach.textContent = `BREACH (${g.breachCharges})`;
     this.els.btnWave.disabled = g.waveActive || g.wave >= g.district.waves;
-    this.els.btnWave.textContent = g.wave === 0 ? 'START WAVE' : g.waveActive ? 'IN PROGRESS' : 'NEXT WAVE';
+    const cd = g.waveTimer !== null && !g.waveActive ? ` · ${Math.ceil(g.waveTimer)}s` : '';
+    this.els.btnWave.textContent = g.waveActive ? 'IN PROGRESS' : (g.wave === 0 ? 'START WAVE' : 'NEXT WAVE') + cd;
     this.els.waveInfo.innerHTML = g.waveInfoText();
   }
   // Called every frame; only touches the DOM when a value changed.
@@ -117,6 +118,8 @@ export class UI {
     $('#stat-lives').classList.toggle('low', g.lives <= 5);
     if (this.lastHud.eddiesTray !== Math.floor(g.eddies) || this.lastHud.ramTray !== Math.floor(g.ram)) { this.lastHud.eddiesTray = Math.floor(g.eddies); this.lastHud.ramTray = Math.floor(g.ram); this.refreshTrays(); }
     if (g.waveActive) { const left = g.spawnList.length + g.enemies.length; if (this.lastHud.left !== left) { this.lastHud.left = left; this.els.waveInfo.innerHTML = g.waveInfoText(); } }
+    else if (g.waveTimer !== null) { const s = Math.ceil(g.waveTimer); if (this.lastHud.cd !== s) { this.lastHud.cd = s; this.refreshTrays(); } }
+    const iced = g.enemies.some(e => e.ice); if (this.lastHud.iced !== iced) { this.lastHud.iced = iced; document.querySelector('.tab[data-tab="hacks"]').classList.toggle('alert', iced); }
   }
 
   // ---------- Panels ----------
