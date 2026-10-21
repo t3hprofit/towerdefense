@@ -21,24 +21,27 @@
 //             'K' kick+hat, 'S' snare+hat, '.' rest. null = no drums.
 //   }
 //   order     section names in play order. loopFrom is the index the loop returns to.
+//   ambience  optional noise bed under the whole song: { hp, lp (Hz band), vol }. Rain, basically.
 
+// Watson: rainy night city. The original Am | C G bones, slowed right down: a bell arpeggio
+// cascading like raindrops (still the Am arp riding over the moving bass, still jumping up a
+// fifth), a soft e-piano lead, half-time drums, and a rain bed under everything.
 const WATSON_SECTIONS = {
-  // The original loop: Am | C G with the Am arpeggio riding over the bass.
   I: { chords: [[0, 'm'], [0, 'm'], [3, 'M'], [-2, 'M'], [0, 'm'], [0, 'm'], [3, 'M'], [-2, 'M']],
-    bass: '1_1_1_1_1_1_1_1_', arp: [0, 1, 2, 3, 2, 1], arpFollow: false, drums: null },
+    bass: '1_______1_____8_', arp: [0, 1, 2, 3, 2, 1], arpFollow: false, drums: null },
   A: { chords: [[0, 'm'], [0, 'm'], [3, 'M'], [-2, 'M'], [0, 'm'], [0, 'm'], [3, 'M'], [-2, 'M']],
-    bass: '1_1_1_1_1_1_1_1_', arp: [0, 1, 2, 3, 2, 1], arpFollow: false, drums: 'K.h.S.h.K.h.S.h.' },
-  // The original "up a fifth" segment, now with a lead over it.
+    bass: '1_______1_____8_', arp: [0, 1, 2, 3, 2, 1], arpFollow: false, drums: 'K...h...S...h.h.' },
+  // The original "up a fifth" segment, with the lead over it.
   B: { chords: [[0, 'm'], [0, 'm'], [3, 'M'], [-2, 'M'], [0, 'm'], [0, 'm'], [3, 'M'], [-2, 'M']],
-    bass: '1_1_1_1_1_1_1_1_', arp: [0, 1, 2, 3, 2, 1], arpFollow: false, arpShift: 7, drums: 'K.h.S.h.K.h.S.ho',
+    bass: '1_______1_____8_', arp: [0, 1, 2, 3, 2, 1], arpFollow: false, arpShift: 7, drums: 'K...h.k.S...h.ho',
     lead: '12:3 10:1 8:4 7:6 .:2  3:2 5:2 7:4 .:2 7:2 5:2 2:2  0:6 .:2 3:2 5:2 7:4  8:4 7:4 5:2 3:2 2:4' },
   // Bridge: F G Am E, the arp follows the chords for the first time.
   C: { chords: [[-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M'], [0, 'm'], [0, 'm'], [7, 'M'], [7, 'M']],
-    bass: '1_1_1_1_1_1_8_1_', arp: [0, 2, 3, 2], drums: 'K.h.S.h.K.h.S.hh',
+    bass: '1_______1___8___', arp: [0, 2, 3, 5, 3, 2], drums: 'K...h.k.S.h.h.h.',
     lead: '8:4 12:4 15:4 12:4  10:4 14:4 17:4 14:4  12:4 15:2 17:2 19:8  19:4 14:4 11:4 .:4' },
   // Chorus: Am F C G with the hook.
   D: { chords: [[0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [3, 'M'], [3, 'M'], [-2, 'M'], [-2, 'M']],
-    bass: '1_1_1_1_1_1_8_1_', arp: [0, 1, 2, 3, 2, 1], drums: 'K.h.S.hhK.h.S.ho',
+    bass: '1_______1___8___', arp: [0, 1, 2, 3, 2, 1], drums: 'K.h.h.k.S.h.h.ho',
     lead: '12:2 .:2 12:2 15:2 17:4 15:2 12:2  8:2 .:2 8:2 12:2 15:4 12:2 8:2  7:2 .:2 7:2 10:2 12:4 10:2 7:2  10:4 7:4 5:4 2:4' },
 };
 
@@ -59,9 +62,10 @@ export const SONGS = {
     },
     order: ['A', 'B', 'A', 'C', 'B'], loopFrom: 0,
   },
-  // Watson: the original A minor loop, grown into a full tune.
+  // Watson: see WATSON_SECTIONS above.
   watson: {
-    bpm: 107, root: 55, voices: { bass: 'fatbass', arp: 'softarp', lead: 'supersaw' },
+    bpm: 88, root: 55, voices: { bass: 'fatbass', arp: 'bell', lead: 'epiano' },
+    ambience: { hp: 1200, lp: 5000, vol: 0.08 },
     sections: WATSON_SECTIONS,
     order: ['I', 'A', 'B', 'A', 'B', 'C', 'D', 'D', 'B'], loopFrom: 1,
   },

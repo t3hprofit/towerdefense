@@ -29,7 +29,7 @@ class AudioEngine {
   constructor() {
     this.ctx = null; this.master = null; this.sfxGain = null; this.musicGain = null;
     this.sfxOn = true; this.sfxLevel = 1; this.musicOn = true; this.weaponGain = null; this.musicTimer = null; this.step = 0; this.nextNoteTime = 0;
-    this.track = 'menu'; this.song = null; this.stepLen = 0.14; this.musicDelay = null; this.musicVerb = null;
+    this.track = 'menu'; this.song = null; this.stepLen = 0.14; this.musicDelay = null; this.musicVerb = null; this.ambience = null;
     this.noiseBuf = null; this.lastPlayed = {};
   }
   init() {
@@ -62,7 +62,7 @@ class AudioEngine {
     const vlp = this.ctx.createBiquadFilter(); vlp.type = 'lowpass'; vlp.frequency.value = 3500; const vg = this.ctx.createGain(); vg.gain.value = 0.6;
     this.musicVerb.connect(vlp); vlp.connect(vg); vg.connect(this.musicGain);
     // Tempo-synced feedback delay the music patches send to (delayTime is set per song).
-    this.musicDelay = this.ctx.createDelay(1); this.musicDelay.delayTime.value = 0.3;
+    this.musicDelay = this.ctx.createDelay(2); this.musicDelay.delayTime.value = 0.3;
     const dfb = this.ctx.createGain(); dfb.gain.value = 0.3; const dlp = this.ctx.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
     this.musicDelay.connect(dlp); dlp.connect(dfb); dfb.connect(this.musicDelay); dlp.connect(this.musicGain);
     const len = this.ctx.sampleRate * 1;
@@ -212,6 +212,7 @@ class AudioEngine {
     const now = this.ctx.currentTime;
     this.step = 0; this.nextNoteTime = now + (switching ? 0.3 : 0.1);
     this.musicDelay.delayTime.setValueAtTime(stepLen * 6, now);  // dotted eighth
+    if (song.ambience) this.startAmbience(song.ambience, now);
     if (switching) {
       // Dip the bus so the old track's last scheduled notes fade instead of overlapping the new one.
       const g = this.musicGain.gain; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
@@ -229,7 +230,20 @@ class AudioEngine {
     };
     this.musicTimer = setInterval(tick, 100);
   }
-  stopMusic() { if (this.musicTimer) { clearInterval(this.musicTimer); this.musicTimer = null; } }
+  // Noise bed (rain): looped noise through a band, the lowpass drifting slowly, faded in over 3 s.
+  startAmbience(a, now) {
+    const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuf; src.loop = true;
+    const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = a.hp;
+    const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = a.lp;
+    const lfo = this.ctx.createOscillator(); lfo.frequency.value = 0.13; const lg = this.ctx.createGain(); lg.gain.value = a.lp * 0.3; lfo.connect(lg); lg.connect(lp.frequency);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, now); g.gain.linearRampToValueAtTime(a.vol, now + 3);
+    src.connect(hp); hp.connect(lp); lp.connect(g); g.connect(this.musicGain); src.start(now); lfo.start(now);
+    this.ambience = { src, lfo, g };
+  }
+  stopMusic() {
+    if (this.musicTimer) { clearInterval(this.musicTimer); this.musicTimer = null; }
+    if (this.ambience) { const { src, lfo, g } = this.ambience, t = this.ctx.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0.0001, t + 0.3); src.stop(t + 0.35); lfo.stop(t + 0.35); this.ambience = null; }
+  }
   // Backgrounded: silence everything and stop scheduling (throttled timers otherwise stutter the music).
   background() { this.stopMusic(); if (this.ctx && this.ctx.state === 'running') this.ctx.suspend().catch(() => {}); }
   foreground() { if (!this.ctx) return; this.ctx.resume().catch(() => {}); if (this.musicOn) this.startMusic(); }

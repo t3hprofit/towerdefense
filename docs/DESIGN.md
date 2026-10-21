@@ -138,7 +138,8 @@ arp and lead are patches from the `PATCHES` table in `audio.js` (layered oscilla
 swept lowpass with an ADSR, FM for the bell and e-piano, vibrato and stereo width on leads and
 pads, sends to a tempo-synced delay and a generated convolution reverb); each song names its own
 three. The music bus runs through a soft compressor, trimmed back so its level against the SFX
-is unchanged. Kick, snare and hats are a sine sweep and filtered noise. The UI
+is unchanged. Kick, snare and hats are a sine sweep and filtered noise. A song can ask for an
+`ambience` noise bed (Watson's rain). The UI
 picks the track: `menu` from the first tap anywhere (browsers allow no sound before a gesture)
 and again on quit, the district id when a district card is tapped.
 
