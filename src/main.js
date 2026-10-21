@@ -4,9 +4,11 @@ import { UI } from './ui/ui.js';
 import { Save } from './core/save.js';
 import { Audio } from './core/audio.js';
 import { Session } from './core/session.js';
+import { initAnalytics } from './core/analytics.js';
 
 Save.load();
 Session.load();
+initAnalytics();
 const ui = new UI();
 const game = new Game(ui);
 const canvas = document.getElementById('game');

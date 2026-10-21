@@ -90,6 +90,10 @@ button { font-family: inherit; color: inherit; }
 .menu-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; }
 .menu-btns .row { display: flex; gap: 10px; }
 .menu-btns .row .btn { flex: 1; }
+.consent { width: 100%; max-width: 300px; border: 1px solid var(--line); background: rgba(0,240,255,0.05); padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+.consent p { margin: 0; font-size: 12px; line-height: 1.35; color: var(--dim); }
+.consent .row { display: flex; gap: 10px; }
+.consent .row .btn { flex: 1; }
 .menu-foot { font-size: 11px; color: var(--dim); letter-spacing: 0.1em; }
 .logo { text-align: center; }
 .logo-top { font-size: 22px; letter-spacing: 0.5em; color: var(--yellow); font-weight: 700; text-shadow: 0 0 12px rgba(252,238,10,0.6); }

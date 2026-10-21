@@ -6,6 +6,7 @@ import { TIERS, TIER_ORDER } from '../data/tiers.js';
 import { Save } from '../core/save.js';
 import { Audio } from '../core/audio.js';
 import { Session } from '../core/session.js';
+import { getConsent, setConsent } from '../core/analytics.js';
 
 const $ = (s) => document.querySelector(s);
 const fmtScore = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : String(n);
@@ -25,6 +26,9 @@ export class UI {
     $('#btn-back-menu').onclick = () => this.showScreen('menu');
     $('#btn-sfx').onclick = () => { const cur = this.sfxLevel(); const v = cur === 1 ? 0.5 : cur === 0.5 ? 0 : 1; Save.setSetting('sfx', v); Audio.init(); Audio.setSfx(v); this.syncSettings(); Audio.play('blip'); };
     $('#btn-music').onclick = () => { const v = !Save.data.settings.music; Save.setSetting('music', v); Audio.init(); Audio.setMusic(v); this.syncSettings(); };
+    $('#btn-analytics').onclick = () => { setConsent(getConsent() === 'granted' ? 'denied' : 'granted'); this.syncSettings(); };
+    $('#btn-consent-yes').onclick = () => { setConsent('granted'); this.syncSettings(); };
+    $('#btn-consent-no').onclick = () => { setConsent('denied'); this.syncSettings(); };
     $('#btn-reset').onclick = () => { if (confirm('Wipe all progress?')) { Save.reset(); Audio.setSfx(1); Audio.setMusic(Save.data.settings.music); this.syncSettings(); this.toast('Save wiped', 'warn'); } };
     document.querySelectorAll('.tab[data-tab]').forEach(b => b.onclick = () => this.setTab(b.dataset.tab));
     this.els.btnBreach.onclick = () => { Audio.play('blip'); game.openBreach(); };
@@ -38,7 +42,7 @@ export class UI {
     Audio.setSfx(this.sfxLevel()); Audio.setMusic(Save.data.settings.music);
   }
   sfxLevel() { const s = Save.data.settings.sfx; return s === true ? 1 : s === false ? 0 : Number(s) || 0; }
-  syncSettings() { const l = this.sfxLevel(); $('#btn-sfx').textContent = 'SFX: ' + (l === 1 ? 'FULL' : l === 0.5 ? 'LOW' : 'OFF'); $('#btn-music').textContent = 'MUSIC: ' + (Save.data.settings.music ? 'ON' : 'OFF'); }
+  syncSettings() { const l = this.sfxLevel(); $('#btn-sfx').textContent = 'SFX: ' + (l === 1 ? 'FULL' : l === 0.5 ? 'LOW' : 'OFF'); $('#btn-music').textContent = 'MUSIC: ' + (Save.data.settings.music ? 'ON' : 'OFF'); const c = getConsent(); $('#btn-analytics').textContent = 'ANALYTICS: ' + (c === 'granted' ? 'ON' : 'OFF'); $('#consent').classList.toggle('hidden', c !== null); }
   showScreen(name) {
     for (const k in this.screens) this.screens[k].classList.toggle('hidden', k !== name);
     if (name === 'districts') this.renderDistricts();
