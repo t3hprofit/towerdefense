@@ -215,9 +215,9 @@ export class Game {
   applyDaemon(id) {
     this.stats.daemons++; Session.add(SCORE_DAEMON); if (DAEMONS[id].once) this.uploadedOnce.add(id);
     switch (id) {
-      case 'datamine1': this.eddies += 100; break;
-      case 'datamine2': this.eddies += 250; break;
-      case 'datamine3': this.eddies += 500; break;
+      case 'datamine1': this.eddies += 80; break;
+      case 'datamine2': this.eddies += 180; break;
+      case 'datamine3': this.eddies += 350; break;
       case 'icepick': this.fx.icepick = true; break;
       case 'massvuln': this.fx.massvuln = 1; break;
       case 'blackwall': this.fx.blackwall = 2; break;

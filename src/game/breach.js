@@ -23,10 +23,12 @@ export class Breach {
     }
     const codesAlong = path.map(([pr, pc]) => this.grid[pr][pc]);
     // Choose daemons and lay their sequences along the path with small overlaps.
-    const pool = daemonPool.slice();
+    // Pick 3 daemons; at most one from any exclusive group (e.g. the DATAMINE eddies family).
+    let pool = daemonPool.slice();
     const chosen = [];
     for (let i = 0; i < 3 && pool.length; i++) {
-      const d = rng.weighted(pool, x => x.weight); pool.splice(pool.indexOf(d), 1); chosen.push(d);
+      const d = rng.weighted(pool, x => x.weight); chosen.push(d);
+      pool = pool.filter(x => x !== d && !(d.group && x.group === d.group));
     }
     chosen.sort((a, b) => a.len - b.len);
     let start = 0;
