@@ -1,6 +1,7 @@
 import { COLORS, FONT } from '../config/tokens.js';
 import { TOWERS } from '../data/towers.js';
 import { posAt } from '../game/path.js';
+import { themeFor, buildGroundLayer, Ambient } from './themes.js';
 
 export class Renderer {
   constructor(canvas, game) {
@@ -13,7 +14,7 @@ export class Renderer {
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.w = Math.max(1, Math.floor(rect.width)); this.h = Math.max(1, Math.floor(rect.height));
     this.canvas.width = Math.round(rect.width * this.dpr); this.canvas.height = Math.round(rect.height * this.dpr);
-    this.vignette = null;
+    this.vignette = null; this.groundKey = null;
     const g = this.game; this.cs = Math.floor(Math.min(this.w / g.cols, this.h / g.rows));
     this.ox = Math.floor((this.w - this.cs * g.cols) / 2); this.oy = Math.floor((this.h - this.cs * g.rows) / 2);
   }
@@ -28,8 +29,8 @@ export class Renderer {
     if (g.state === 'menu' || !g.district) { this.drawIdle(); return; }
     ctx.save();
     if (g.shake > 0) { const s = g.shake * 6; ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s); }
-    this.drawGrid(); this.drawBlocked(); this.drawRoutes(); this.drawBuildHints(); this.drawAccessPoints();
-    this.drawTowers(); this.drawHackLinks(); this.drawEnemies(); this.drawProjectiles(); this.drawZaps(); this.drawParticles(); this.drawTexts();
+    this.drawGround(); this.drawBlocked(); this.drawRoutes(); this.drawBuildHints(); this.drawAccessPoints();
+    this.drawTowers(); this.drawHackLinks(); this.drawEnemies(); this.drawProjectiles(); this.drawZaps(); this.drawParticles(); this.drawTexts(); this.drawAmbient();
     ctx.restore();
     if (g.flash > 0) { ctx.fillStyle = `rgba(255,42,109,${g.flash * 0.5})`; ctx.fillRect(0, 0, this.w, this.h); }
     this.drawVignette();
@@ -46,6 +47,15 @@ export class Renderer {
       grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.55)'); this.vignette = grd;
     }
     ctx.fillStyle = this.vignette; ctx.fillRect(0, 0, this.w, this.h);
+  }
+  drawGround() {
+    const g = this.game; const key = g.district.id + ':' + this.w + 'x' + this.h + ':' + this.cs;
+    if (this.groundKey !== key) { this.groundKey = key; this.ground = buildGroundLayer(this, g); this.theme = themeFor(g.district); this.ambient = new Ambient(this.theme, this.w, this.h); this.lastAmb = performance.now(); }
+    this.ctx.drawImage(this.ground, 0, 0, this.w, this.h);
+  }
+  drawAmbient() {
+    if (!this.ambient) return; const now = performance.now(); const dt = Math.min(0.05, (now - this.lastAmb) / 1000); this.lastAmb = now;
+    if (!this.game.paused) this.ambient.draw(this.ctx, dt); else this.ambient.draw(this.ctx, 0);
   }
   drawGrid() {
     const ctx = this.ctx, g = this.game, cs = this.cs;
@@ -76,9 +86,13 @@ export class Renderer {
       const route = g.routes[i]; const active = all || i === g.activeRoute;
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       ctx.beginPath(); route.pts.forEach((p, k) => k ? ctx.lineTo(this.sx(p.x), this.sy(p.y)) : ctx.moveTo(this.sx(p.x), this.sy(p.y)));
-      ctx.strokeStyle = active ? COLORS.road : '#100e16'; ctx.lineWidth = cs * 0.78; ctx.stroke();
-      ctx.strokeStyle = active ? COLORS.roadEdge : COLORS.roadAlt; ctx.globalAlpha = active ? 0.9 : 0.35; ctx.lineWidth = active ? 2 : 1.5;
+      const th = this.theme || themeFor(g.district);
+      ctx.strokeStyle = active ? th.road : '#100e16'; ctx.lineWidth = cs * 0.78; ctx.stroke();
+      if (active && th.wet) { ctx.strokeStyle = 'rgba(0,240,255,0.06)'; ctx.lineWidth = cs * 0.5; ctx.stroke(); }
+      if (active && th.cracked) { ctx.lineCap = 'butt'; ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = cs * 0.78; ctx.setLineDash([2, cs * 0.7]); ctx.stroke(); ctx.setLineDash([]); ctx.lineCap = 'round'; }
+      ctx.strokeStyle = active ? th.roadEdge : COLORS.roadAlt; ctx.globalAlpha = active ? 0.9 : 0.35; ctx.lineWidth = active ? 2 : 1.5;
       ctx.setLineDash(active ? [] : [6, 8]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      if (active && th.hazard) { ctx.strokeStyle = '#fcee0a'; ctx.lineWidth = 3; ctx.globalAlpha = 0.8; ctx.stroke(); ctx.strokeStyle = '#000'; ctx.setLineDash([cs * 0.22, cs * 0.22]); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1; }
       // Centre dashes flowing in the direction of travel
       if (active) {
         ctx.strokeStyle = g.district.color; ctx.globalAlpha = 0.35; ctx.lineWidth = 2; ctx.setLineDash([cs * 0.25, cs * 0.5]); ctx.lineDashOffset = -(g.time * cs * 0.8) % (cs * 0.75);
