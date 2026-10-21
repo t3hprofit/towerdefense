@@ -34,6 +34,7 @@ dependencies. Everything (art, audio, icons) is generated in code. Read this fil
 
 ## Decisions the owner has made (do not relitigate)
 
+- Keep the CD PROJEKT RED fan-work disclaimer (menu footer, `privacy.html`, README). Never use assets from their games, add monetization, or a paywall.
 - The ICE Deck unlocks at Heywood (district 3), **not earlier**. Watson and Westbrook are meant to be played without a firewall.
 - Losses record **half** score toward the district best and zero stars.
 - Nothing is ever drawn over the map: tower/quickhack descriptions live in the strip over the wave bar, and all game messages go through the one-line **ticker** under the map (`ui.toast()` queues into it). No overlay toasts on the field.

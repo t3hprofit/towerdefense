@@ -95,6 +95,7 @@ button { font-family: inherit; color: inherit; }
 .consent .row { display: flex; gap: 10px; }
 .consent .row .btn { flex: 1; }
 .consent a, .menu-foot a { color: var(--cyan); }
+.menu-foot .fan { display: inline-block; font-size: 10px; letter-spacing: 0.04em; line-height: 1.4; margin-top: 4px; }
 .menu-foot { font-size: 11px; color: var(--dim); letter-spacing: 0.1em; text-align: center; line-height: 2; }
 .logo { text-align: center; }
 .logo-top { font-size: 22px; letter-spacing: 0.5em; color: var(--yellow); font-weight: 700; text-shadow: 0 0 12px rgba(252,238,10,0.6); }

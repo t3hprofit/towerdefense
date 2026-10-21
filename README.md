@@ -7,6 +7,11 @@ store, no build step, no dependencies. Open it in Safari, add it to the home scr
 Live: **https://t3hprofit.github.io/towerdefense/** (deployed from this branch by
 `.github/workflows/static.yml` on every push).
 
+This is an unofficial fan work and is not approved/endorsed by CD PROJEKT RED. Cyberpunk,
+Cyberpunk 2077 and related names belong to their respective owners. All art, audio and code here
+are original and generated in code; no assets from any CD PROJEKT RED game are used. The game is
+free, has no ads, paywall or purchases, and will be taken down if CD PROJEKT RED asks.
+
 Docs:
 - `docs/DESIGN.md` — every mechanic and its numbers.
 - `docs/BALANCE.md` — how it is tuned, the playtest log, and which knob fixes which complaint.
