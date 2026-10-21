@@ -33,7 +33,9 @@ export function generateWave(district, wave, tierId = 'netrunner') {
     groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: bossMult, boss: true });
   }
   // ICE shields: from wave 4 a rising share of non-boss enemies spawn shielded; bosses always are.
-  const iceChance = wave >= 4 ? Math.min(0.6, (0.08 + 0.05 * (wave - 4)) * tier.ice) : 0;
+  // Shield share ramps per wave but is capped by district so early maps (no ICE Deck yet) stay RAM-feasible.
+  const iceCap = Math.min(0.4, 0.22 + 0.06 * (district.num - 1));
+  const iceChance = wave >= 4 ? Math.min(iceCap * Math.max(1, tier.ice), (0.08 + 0.05 * (wave - 4)) * tier.ice) : 0;
   for (const g of groups) { g.ice = []; for (let i = 0; i < g.count; i++) g.ice.push(g.boss || (!ENEMIES[g.type].hacker && rng.next() < iceChance)); }
   return { wave, groups, boss: isBoss, bonus: 40 + 12 * wave };
 }
