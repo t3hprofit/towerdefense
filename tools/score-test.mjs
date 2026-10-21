@@ -99,8 +99,19 @@ const fin2 = await page.evaluate(() => { const { game, Save } = window.__ncb; ga
 const txt2 = await page.innerText('#screen-result');
 check('lower run keeps best, no NEW BEST', fin2.bestScore === fin.runScore && !/NEW BEST/.test(txt2), JSON.stringify(fin2));
 // backward compat: old record without bestScore
-const compat = await page.evaluate(() => { const { Save } = window.__ncb; Save.data.districts.westbrook = { stars: 1, bestWave: 4, won: true, plays: 2 }; Save.recordResult('westbrook', { won: false, wave: 2, stars: 0, nextId: null, score: 50 }); const a = Save.district('westbrook'); Save.recordResult('westbrook', { won: false, wave: 2, stars: 0, nextId: null }); return [a, Save.district('westbrook')]; });
+const compat = await page.evaluate(() => { const { Save } = window.__ncb; Save.tierData().districts.westbrook = { stars: 1, bestWave: 4, won: true, plays: 2 }; Save.recordResult('westbrook', { won: false, wave: 2, stars: 0, nextId: null, score: 50 }); const a = Save.district('westbrook'); Save.recordResult('westbrook', { won: false, wave: 2, stars: 0, nextId: null }); return [a, Save.district('westbrook')]; });
 check('old record backward compatible', compat[0].bestScore === 50 && compat[0].stars === 1 && compat[1].bestScore === 50, JSON.stringify(compat));
+// per-tier progress: a win on one tier does not unlock or star on another; legacy saves migrate to street + netrunner
+const tiers = await page.evaluate(() => {
+  const { Save } = window.__ncb;
+  Save.recordResult('watson', { won: true, wave: 10, stars: 2, nextId: 'westbrook', score: 900, tier: 'legend' });
+  const a = { legendUnlocked: Save.isUnlocked('westbrook', 'legend'), blackwallUnlocked: Save.isUnlocked('westbrook', 'blackwall'), legendStars: Save.totalStars('legend'), blackwallStars: Save.totalStars('blackwall'), legendBest: Save.district('watson', 'legend').bestScore };
+  localStorage.setItem('ncb_save_v1', JSON.stringify({ districts: { watson: { stars: 3, bestWave: 10, won: true, plays: 1, bestScore: 5000 } }, unlocked: ['watson', 'westbrook'], settings: { tier: 'netrunner' } }));
+  Save.load();
+  return { ...a, migNet: Save.district('watson', 'netrunner').stars, migStreet: Save.isUnlocked('westbrook', 'street'), migLegend: Save.isUnlocked('westbrook', 'legend'), legacyKeysGone: !('districts' in Save.data) && !('unlocked' in Save.data), tier: Save.currentTier() };
+});
+check('progress is per tier', tiers.legendUnlocked && !tiers.blackwallUnlocked && tiers.legendStars === 2 && tiers.blackwallStars === 0 && tiers.legendBest === 900, JSON.stringify(tiers));
+check('legacy save migrates to street + netrunner only', tiers.migNet === 3 && tiers.migStreet && !tiers.migLegend && tiers.legacyKeysGone && tiers.tier === 'netrunner', JSON.stringify(tiers));
 
 // fallback when sessionStorage throws
 const p2 = await ctx.newPage(); const err2 = [];

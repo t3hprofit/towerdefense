@@ -290,8 +290,8 @@ export class Game {
     if (won) this.addScore(this.lives * SCORE_LIFE);
     Session.endRun({ won });
     // A loss banks half its score so a high-tier wipe cannot outrank a real clear.
-    const score = won ? Session.state.runScore : Math.round(Session.state.runScore * 0.5); const prevBest = Save.district(this.district.id).bestScore || 0;
-    Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score });
+    const score = won ? Session.state.runScore : Math.round(Session.state.runScore * 0.5); const prevBest = Save.district(this.district.id, this.tier.id).bestScore || 0;
+    Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score, tier: this.tier.id });
     const extra = { score, best: Math.max(prevBest, score), newBest: score > prevBest, total: Session.state.sessionScore, bestCombo: Session.state.bestCombo };
     Audio.play(won ? 'win' : 'lose');
     this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives, bossLeaked: this.bossLeaked, ...extra });

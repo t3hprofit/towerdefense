@@ -6,8 +6,10 @@ Netrunner-tier baseline; see `docs/BALANCE.md` for how tiers scale them and why 
 ## Loop
 
 Six districts, ten waves each, boss on wave ten. Winning unlocks the next district and awards
-1–3 stars by core left (18+ / 10+ / 1+). Progress, stars, best score and settings persist in
-`localStorage`; the live run score and session total live in `sessionStorage` so a reload
+1–3 stars by core left (18+ / 10+ / 1+). Unlocks, stars, best wave and best score are tracked
+**per difficulty tier**: clearing Watson on Legend unlocks Westbrook on Legend only. Progress and
+settings persist in `localStorage` (saves from before per-tier tracking are migrated to Street Kid
+and Netrunner; Legend and Blackwall start fresh); the live run score and session total live in `sessionStorage` so a reload
 mid-run keeps them.
 
 The grid is 9×14 cells, portrait. Enemies follow one or more routes from an off-grid spawn to
@@ -117,7 +119,7 @@ Bosses: Royce, Oni, War Wagon, Minotaur, Placide, Smasher (regenerating).
 | Legend | 1.5 | 1.25 | 1.08 | 1.5 | 7s | 1 | ×2.5 |
 | Blackwall | 1.8 | 1.35 | 1.12 | 1.8 | 6s | 1.5 | ×4 |
 
-Picked on the district screen, saved in settings. Stars count from any tier.
+Picked on the district screen, saved in settings. Each tier has its own unlocks, stars and bests; the district screen shows the selected tier's.
 
 ## Scoring (`src/core/session.js`, hooks in `game.js`)
 

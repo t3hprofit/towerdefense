@@ -52,19 +52,19 @@ export class UI {
 
   // ---------- District select ----------
   renderDistricts() {
-    const list = $('#district-list'); list.innerHTML = ''; $('#cred').textContent = '★ ' + Save.totalStars();
-    const cur = Save.data.settings.tier || 'street';
+    const list = $('#district-list'); list.innerHTML = '';
+    const cur = Save.currentTier(); $('#cred').textContent = '★ ' + Save.totalStars(cur);
     const tp = $('#tier-picker'); tp.innerHTML = '';
     for (const id of TIER_ORDER) {
       const t = TIERS[id]; const b = document.createElement('button'); b.className = 'tier' + (id === cur ? ' sel' : ''); b.style.setProperty('--c', t.color);
-      b.innerHTML = `<span class="tn">${t.name}</span><span class="tm">×${t.score} score</span>`; b.title = t.desc;
+      b.innerHTML = `<span class="tn">${t.name}</span><span class="tm">★ ${Save.totalStars(id)} · ×${t.score}</span>`; b.title = t.desc;
       b.onclick = () => { Save.setSetting('tier', id); Audio.play('blip'); this.renderDistricts(); };
       tp.appendChild(b);
     }
     const tc = $('#tier-cur'); tc.textContent = TIERS[cur].name; tc.style.setProperty('--c', TIERS[cur].color);
     $('#tier-desc').textContent = TIERS[cur].desc;
     for (const d of DISTRICTS) {
-      const unlocked = Save.isUnlocked(d.id); const rec = Save.district(d.id);
+      const unlocked = Save.isUnlocked(d.id, cur); const rec = Save.district(d.id, cur);
       const card = document.createElement('button'); card.className = 'dcard' + (unlocked ? '' : ' locked'); card.style.setProperty('--c', d.color);
       const stars = [1, 2, 3].map(i => `<span class="${rec.stars >= i ? '' : 'off'}">★</span>`).join('');
       card.innerHTML = `<div class="num">${String(d.num).padStart(2, '0')}</div><div class="info"><div class="nm">${d.name}</div><div class="sub">${d.sub}${rec.bestWave ? ` · best wave ${rec.bestWave}` : ''}${rec.bestScore ? ` · <span class="bs">best score ${rec.bestScore.toLocaleString('en-US')}</span>` : ''}</div><div class="desc">${d.desc}</div></div><div class="stars">${stars}</div>`;

@@ -10,7 +10,7 @@ const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, de
 const page = await ctx.newPage(); const errors = [];
 page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message)); page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 await page.goto(BASE + '/index.html'); await page.waitForTimeout(300);
-await page.evaluate(() => { const { Save } = window.__ncb; Save.data.unlocked = ['watson', 'westbrook', 'santo', 'pacifica']; Save.data.districts.watson = { stars: 3, bestWave: 10, won: true, plays: 2 }; Save.data.districts.westbrook = { stars: 2, bestWave: 10, won: true, plays: 1 }; });
+await page.evaluate(() => { const { Save } = window.__ncb; const td = Save.tierData(); td.unlocked = ['watson', 'westbrook', 'santo', 'pacifica']; td.districts.watson = { stars: 3, bestWave: 10, won: true, plays: 2 }; td.districts.westbrook = { stars: 2, bestWave: 10, won: true, plays: 1 }; });
 await page.click('#btn-play'); await page.waitForTimeout(200); await page.screenshot({ path: SP + '/t1-districts.png' });
 await page.click('.dcard:nth-child(4)'); await page.waitForTimeout(300);
 await page.evaluate(() => { const g = window.__ncb.game; g.eddies += 3000; g.build('deck', 4, 10); g.build('smg', 2, 10); g.build('rocket', 6, 10); g.build('tesla', 4, 7); g.build('sniper', 2, 5); g.jackIn(g.accessPoints[0]); g.startWave(); g.speed = 3; });

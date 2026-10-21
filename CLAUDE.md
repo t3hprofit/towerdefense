@@ -43,6 +43,7 @@ dependencies. Everything (art, audio, icons) is generated in code. Read this fil
 - Reroute access points are temporary (25s), not a permanent toggle.
 - Breach charges: 1 to start, +1 after waves 3, 6, 9. The breach does not pause the battlefield.
 - Four tiers: Street Kid / Netrunner / Legend / Blackwall. **Netrunner is the baseline the whole game is tuned around.**
+- Unlocks, stars and bests are **per tier** (`save.js` keeps a `tiers` map). Pre-tier saves migrate to Street Kid and Netrunner only.
 
 ## Balance workflow (short version, details in docs/BALANCE.md)
 
@@ -83,7 +84,6 @@ Playwright is at `/opt/node-tools/node_modules` on the cloud runner; elsewhere i
 ## Open ideas (not started)
 
 - Endless / survival mode after City Center, using the tier multipliers.
-- Per-tier best scores on the district cards (currently one best per district).
 - A fifth tower unlock for City Center (nothing new unlocks there now).
 - Sound: a real mix pass with headphones; the current weapon bus was tuned blind.
 - Self-hosted Rajdhani/Orbitron woff2 so canvas text matches the intended face offline.
