@@ -57,7 +57,9 @@ flat damage reduction (floored at 25% of the hit); hacks, snipers, traps and DoT
 Any enemy with a `hacker` block (netrunner, VDB netrunner, Arasaka runner, Placide) acquires the
 nearest online tower within `range` that is not inside an ICE Deck firewall, and after `time`
 seconds of continuous contact takes it OFFLINE for `disable` seconds. Ranges are set to sit just
-outside SMG range and inside sniper range (2.8–3.6). Placide holds two hacks at once. Purge
+outside SMG range and inside sniper range (2.8–3.6). Runners on the same tower share one progress
+bar: each runner after the first adds half a solo runner's speed (`HACK_STACK` 0.5), so two finish
+in 2/3 of the time and three in half. Placide holds two hacks at once. Purge
 (2 RAM) restores a tower instantly; Cyberware Malfunction drops a runner's hacks.
 
 **Blackwall Husk** (elite, white with a red ring and HUSK label): its hacks **pierce ICE Deck

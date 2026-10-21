@@ -22,6 +22,8 @@ const ECON = () => TUNE().econ ?? 0.6, REWARD_DECAY = () => TUNE().rewardDecay ?
 const COMBO_WINDOW = 1.5, COMBO_CAP = 25, MULT_CAP = 3.5, BOSS_KILL_BONUS = 5000;
 const SCORE_KILL = 10, SCORE_WAVE = 500, SCORE_CLEAN_WAVE = 250, SCORE_DAEMON = 300, SCORE_AP = 100, SCORE_PURGE = 50, SCORE_LIFE = 200, SCORE_ICE = 150;
 // ICE shields: tower damage multiplier while shielded, Arc Node multiplier, boss shield regen delay.
+// Netrunners stacking on one tower: each runner after the first adds this share of a solo runner's speed.
+const HACK_STACK = () => TUNE().hackStack ?? 0.5;
 const ICE_TOWER_MUL = 0.2, ICE_TESLA_MUL = 0.5, ICE_BOSS_MUL = 0.1, ICE_REGEN = 10;
 // Wave countdown: seconds before a wave auto-starts; breach adds time; calling early scores per second saved.
 const PREP_FIRST = 45, PREP_WAVE = 25, PREP_BOSS = 30, BREACH_BONUS_TIME = 10, SCORE_EARLY = 25;
@@ -163,7 +165,7 @@ export class Game {
   purge(t) {
     const qh = QUICKHACKS.purge;
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
-    this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; this.stats.purges++; this.addScore(SCORE_PURGE);
+    this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; t.hackers = 0; this.stats.purges++; this.addScore(SCORE_PURGE);
     for (const e of this.enemies) if (e.hacks) e.hacks = e.hacks.filter(h => h.tower !== t);
     this.trackRun('purge', { tower: t.type });
     Audio.play('purge'); this.burst(t.x, t.y, '#b14cff', 16, 2.4); this.text(t.x, t.y, 'PURGED', '#b14cff');
@@ -190,7 +192,9 @@ export class Game {
     this.ui.refreshTrays();
   }
 
-  dropHacks(e) { for (const hk of e.hacks) { hk.tower.hackers = Math.max(0, hk.tower.hackers - 1); hk.tower.hackProgress = 0; } e.hacks = []; }
+  dropHacks(e) { for (const hk of e.hacks) this.releaseHack(hk.tower); e.hacks = []; }
+  // One runner stops hacking a tower. Shared progress resets only when nobody is left on it.
+  releaseHack(t) { t.hackers = Math.max(0, t.hackers - 1); if (!t.hackers) t.hackProgress = 0; }
 
   // ---------------- Access points ----------------
   jackIn(ap) {
@@ -398,12 +402,13 @@ export class Game {
   }
   runnerAI(e, dt) {
     const h = e.hacker; const cap = h.multi || 1;
-    // Progress existing hacks
+    // Progress existing hacks. Progress lives on the tower, so runners on the same tower stack
+    // (see HACK_STACK): n runners hack at (1 + HACK_STACK × (n − 1)) times solo speed.
     for (const hk of e.hacks) {
       const t = hk.tower;
-      if (!this.towers.includes(t) || t.offline > 0 || Math.hypot(t.x - e.x, t.y - e.y) > h.range + 0.2 || (!h.pierce && this.isFirewalled(t))) { hk.dead = true; t.hackers = Math.max(0, t.hackers - 1); t.hackProgress = 0; continue; }
-      hk.p += dt / h.time; t.hackProgress = Math.max(t.hackProgress || 0, hk.p);
-      if (hk.p >= 1) {
+      if (!this.towers.includes(t) || t.offline > 0 || Math.hypot(t.x - e.x, t.y - e.y) > h.range + 0.2 || (!h.pierce && this.isFirewalled(t))) { hk.dead = true; this.releaseHack(t); continue; }
+      const n = Math.max(1, t.hackers); t.hackProgress = (t.hackProgress || 0) + dt / h.time * (1 + HACK_STACK() * (n - 1)) / n;
+      if (t.hackProgress >= 1) {
         t.offline = h.disable; t.hackProgress = 0; t.hackers = Math.max(0, t.hackers - 1); hk.dead = true;
         Audio.play('hacked'); this.text(t.x, t.y - 0.3, 'OFFLINE', '#ff3b3b'); this.burst(t.x, t.y, '#ff3b3b', 12, 2); this.shake = Math.max(this.shake, 0.25);
         this.hint('purge', 'Tower hacked! Tap it and PURGE, or cover it with an ICE Deck.');
@@ -419,7 +424,7 @@ export class Game {
       if (!h.pierce && this.isFirewalled(t)) continue;
       bd = d; best = t;
     }
-    if (best) { e.hacks.push({ tower: best, p: 0 }); best.hackers = (best.hackers || 0) + 1; }
+    if (best) { e.hacks.push({ tower: best }); best.hackers = (best.hackers || 0) + 1; }
   }
   leak(e) {
     e.dead = true; this.stats.leaks++;

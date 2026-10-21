@@ -68,9 +68,10 @@ new players; breach discoverability for non-Cyberpunk players is an open questio
 | wave clock | `game.js` | 45 / 25 / 30 s, +10 s per breach | pacing |
 | ICE multipliers | `game.js` | tower 0.2, tesla 0.5, boss 0.1 | damage through shields |
 | runner `hacker` blocks | `enemies.js` | range 2.8–3.6, time 1.6–2.8, disable 10–14 | enemy hacking |
+| `hackStack` | `game.js` | 0.5 | speed each extra runner on a tower adds (n runners = 1 + 0.5(n−1) × solo) |
 | tiers | `tiers.js` | see DESIGN.md | everything above × tier |
 
-All of `econ`, `rewardDecay`, `hpRamp`, `budgetRamp`, `diffScale` and per-district `diffs` can be
+All of `econ`, `rewardDecay`, `hackStack`, `hpRamp`, `budgetRamp`, `diffScale` and per-district `diffs` can be
 overridden for a sim run without editing files:
 
 ```
@@ -120,6 +121,13 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
     `diffScale`/`budgetRamp` (a bigger budget is *easier* for the bot: more bodies, more eddies).
     `hpRamp` 0.38 lands Watson 12 / Westbrook 10 at wave 9, leaves the Deck maps at 20, keeps Street
     Kid a clean 3-star and Legend a wipe. Bosses have their own curve and are untouched.
+13. **Runners died before hacking.** Owner 3-starred Netrunner Westbrook 20/20 and reported the
+    netrunners never got hacks off. Hack progress now lives on the tower and stacks across runners
+    (`hackStack`). Swept 0 / 0.5 / 1 at Netrunner; bot wave-9 core: Watson 12 / 8 / 8, Westbrook
+    13 / 1 / 0, Heywood 20 / 14 / 14, Pacifica 19 / 12 / 12, Santo and City Center 20 throughout.
+    Westbrook moves most because its runners come in packs of 3–4. Shipped 0.5. Street Kid stays
+    3 stars except Westbrook (2). The bot purges less well than the owner; if Westbrook now feels
+    unfair, lower `hackStack` before touching runner `time`.
 
 ## How to tune a specific complaint
 
@@ -129,5 +137,5 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
 - "I never need hacks" → ICE share cap / tier `ice`, not HP.
 - "RAM famine" → tier `iceRefund`, ICE Deck `ram` values, or RAM Patch daemon weight.
 - "Runners never hack me" → `hacker.range` relative to SMG range (2.6–3.0); check with `hackcount.mjs`.
-- "Runners are OP" → `hacker.time` up or `disable` down before touching range.
+- "Runners are OP" → `hackStack` down, then `hacker.time` up or `disable` down before touching range.
 - "Economy snowballs" → `rewardDecay` first, then `econ`.
