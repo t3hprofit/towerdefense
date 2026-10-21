@@ -1,5 +1,6 @@
 // Offline-first service worker: precache the whole game, serve from cache, refresh in background.
-const CACHE = 'ncb-v3';
+// 'ncb-dev' is replaced with the commit SHA by the deploy workflow, so every deploy is a new cache.
+const CACHE = 'ncb-dev';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './src/main.js', './src/config/tokens.js', './src/core/rng.js', './src/core/save.js', './src/core/session.js', './src/core/audio.js',
