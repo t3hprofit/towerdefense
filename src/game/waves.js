@@ -13,7 +13,7 @@ export function generateWave(district, wave, tierId = 'netrunner') {
   const isBoss = wave === district.waves;
   const diff = (T().diffs?.[district.id] ?? district.difficulty) * (T().diffScale ?? 1);
   const budget = Math.round((9 + (T().budgetRamp ?? 4.5) * (wave - 1)) * (0.75 + 0.25 * diff) * (isBoss ? 0.6 : 1) * tier.count);
-  const hpMult = diff * (1 + (T().hpRamp ?? 0.3) * (wave - 1)) * tier.hp;
+  const hpMult = diff * (1 + (T().hpRamp ?? 0.38) * (wave - 1)) * tier.hp;
   const roster = district.roster.filter(e => e.from <= wave);
   // Budget cost is health-based (60 HP = 1 point) with a small speed premium and a runner premium,
   // so every wave's total health tracks the budget curve regardless of which types are rolled.

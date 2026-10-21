@@ -26,15 +26,18 @@ and mismanages RAM against shield regen), so from Westbrook on it typically reac
 and use the owner's results for boss calibration. `BOSSDBG=1 TIER=… node tools/sim.mjs hacker <district>`
 prints the boss's HP every 3 s.
 
-Current readings (commit at time of writing, before the boss rule):
+Current readings (`hpRamp` 0.38, boss rule on, so the bot loses every Netrunner boss; read wave 9):
 
 | Tier | Watson | Westbrook | Heywood | Santo | Pacifica | Center |
 |---|---|---|---|---|---|---|
-| Street (hacker) | 15 ★★ | 14 ★★ | 20 ★★★ | 15 ★★ | 15 ★★ | 15 ★★ |
-| Netrunner (hacker) | 9 ★ | 3 ★ | 15 ★★ | 12 ★★ | 5 ★ | 15 ★★ |
-| Netrunner (basic) | loss | loss | loss | loss | loss | loss |
+| Street (hacker) | 20 ★★★ | 20 ★★★ | 20 ★★★ | 20 ★★★ | 20 (boss) | 20 (boss) |
+| Netrunner (hacker) | 12 | 10 | 20 | 20 | 15 | 20 |
+| Legend (hacker) | wave 4 | wave 6 | wave 9 | wave 9 | wave 9 | wave 9 |
 
-(numbers are core left on wave 10)
+(numbers are core left on wave 9 for Netrunner, the wave the bot fell on for Legend)
+
+Pre-rework readings for reference, core left on wave 10 before the boss rule: Street 15/14/20/15/15/15,
+Netrunner 9/3/15/12/5/15.
 
 Owner's own results on Netrunner so far: Watson 20 ★★★, Westbrook 4 ★ (under-hacked),
 Heywood 13 ★★, Santo 20 ★★★, Pacifica 20 ★★★ (8 towers, 20 hacks, 0 purges, 5 access points;
@@ -53,7 +56,7 @@ new players; breach discoverability for non-Cyberpunk players is an open questio
 |---|---|---|---|
 | `difficulty` per district | `districts.js` | 1.6 / 0.95 / 1.15 / 1.25 / 0.9 / 1.0 | base HP and budget multiplier for regular waves |
 | `startEddies` | `districts.js` | 280 → 540 | opening build |
-| `hpRamp` | `waves.js` | 0.30 | HP growth per wave (wave 10 = 3.7× wave 1) |
+| `hpRamp` | `waves.js` | 0.38 | HP growth per wave (wave 10 = 4.4× wave 1) |
 | `budgetRamp` | `waves.js` | 4.5 | budget growth per wave (budget × 60 × hpMult = the wave's effective HP) |
 | enemy cost | `waves.js` | `hp/60 × (0.75+0.25·speed) × (1+armor/15) × (runner 1.3)` | what a type costs the budget; `pts` on enemies is unused |
 | HP normalization | `waves.js` | on | group counts scaled so Σ hp×(1+armor/15) matches the budget; runner caps topped up from the biggest non-runner group |
@@ -110,6 +113,13 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
     HP per district at Netrunner. Re-check with the owner before touching `hpRamp`.
 11. **Audio**: weapon SFX were a square-wave chirp every 45 ms. Now a separate quieter bus with
    longer throttles, plus FULL/LOW/OFF. Tuned without listening; expect another pass.
+12. **Post-rework drift.** After item 10 the owner cleared Netrunner Watson 20/20 with 5 towers and
+    1270 eddies unspent, and Westbrook 20/20 with 4 towers; the bot's wave-9 core went 9 → 17 on
+    Watson and 3 → 17 on Westbrook. The drop sat in the two pre-Deck maps (the armor premium made
+    heavies rarer); Heywood onward was already clean at wave 9. Swept `hpRamp` 0.30–0.40 and
+    `diffScale`/`budgetRamp` (a bigger budget is *easier* for the bot: more bodies, more eddies).
+    `hpRamp` 0.38 lands Watson 12 / Westbrook 10 at wave 9, leaves the Deck maps at 20, keeps Street
+    Kid a clean 3-star and Legend a wipe. Bosses have their own curve and are untouched.
 
 ## How to tune a specific complaint
 
