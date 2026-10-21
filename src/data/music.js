@@ -4,9 +4,11 @@
 // Song format
 //   bpm       tempo; one step is a 16th note (4 per beat, 16 per bar).
 //   root      Hz of the song's tonic in the bass register (A1 = 55).
-//   voices    oscillator types for the bass, arp and lead.
+//   voices    oscillator types for the bass, arp and lead. voices.pluck = seconds: the lead is
+//             plucked (instant attack, decays in that time whatever the note length).
 //   sections  name -> {
-//     chords  one [semitones from root, 'm' | 'M'] per HALF bar (8 steps), so 8 entries = 4 bars.
+//     chords  one [semitones from root, 'm' | 'M' | '5'] per HALF bar (8 steps), so 8 entries =
+//             4 bars. '5' is an open fifth (no third).
 //     bass    16-char pattern per bar, repeated: '1' root '3' third '5' fifth '7' flat 7th
 //             '8' octave, '.' rest, '_' hold the previous note one more step.
 //     arp     chord-tone indices cycled one per step (0 root, 1 third, 2 fifth, 3 octave,
@@ -54,23 +56,26 @@ export const SONGS = {
     sections: WATSON_SECTIONS,
     order: ['I', 'A', 'B', 'A', 'B', 'C', 'D', 'D', 'B'], loopFrom: 1,
   },
-  // Westbrook: brighter and quicker, D minor with a pentatonic hook for Japantown.
+  // Westbrook: Japantown. The in (miyako-bushi) scale D Eb G A Bb with its minor-second step,
+  // open-fifth chords instead of triads, a plucked koto-style lead with grace notes and tremolo,
+  // and a sparse taiko-like kick pattern.
   westbrook: {
-    bpm: 124, root: 73.42, voices: { bass: 'sawtooth', arp: 'square', lead: 'triangle' },
+    bpm: 118, root: 73.42, voices: { bass: 'sawtooth', arp: 'square', lead: 'triangle', pluck: 0.45 },
     sections: {
-      I: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M']],
-        bass: '1_1_1_1_1_1_1_1_', arp: [0, 3, 2, 3], drums: null },
-      A: { chords: [[0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [3, 'M'], [3, 'M'], [-2, 'M'], [-2, 'M']],
-        bass: '1_1_1.1_1_1_8.1_', arp: [0, 3, 2, 3, 1, 3], drums: 'K.h.S.h.K.h.S.h.' },
-      B: { chords: [[0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [3, 'M'], [3, 'M'], [-2, 'M'], [-2, 'M']],
-        bass: '1_1_1.1_1_1_8.1_', arp: [0, 3, 2, 3, 1, 3], drums: 'K.h.S.h.K.h.S.ho',
-        lead: '12:2 14:2 15:4 12:2 7:6  8:2 7:2 3:4 .:2 2:2 3:2 7:2  12:2 15:2 19:4 15:2 12:2 10:4  10:4 12:2 10:2 7:8' },
-      C: { chords: [[-7, 'm'], [-7, 'm'], [0, 'm'], [0, 'm'], [-7, 'm'], [-7, 'm'], [-5, 'M'], [-5, 'M']],
-        bass: '1_1_1_1_1_1_8_5_', arp: [0, 2, 3, 2], drums: 'K.h.S.h.K.hhS.ho',
-        lead: '19:2 20:2 19:2 14:2 12:8  15:2 14:2 12:2 7:2 8:4 7:4  17:2 19:2 20:4 19:2 17:2 14:4  13:4 16:4 19:8' },
-      D: { chords: [[0, 'm'], [0, 'm'], [3, 'M'], [3, 'M'], [-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M']],
-        bass: '1_1_1.1_1_1_8.1_', arp: [0, 3, 2, 3, 1, 3], drums: 'K.h.S.hhK.h.S.ho',
-        lead: '12:4 15:2 17:2 19:4 17:2 15:2  12:4 15:2 17:2 19:4 20:2 19:2  20:4 19:4 15:4 12:4  10:4 12:4 14:4 15:4' },
+      I: { chords: [[0, '5'], [0, '5'], [0, '5'], [0, '5'], [0, '5'], [0, '5'], [1, '5'], [0, '5']],
+        bass: '1___1_..1___1_8_', arp: [0, 2, 3, 4], drums: null,
+        lead: '12:3 13:1 12:4 7:4 5:4  .:4 8:2 7:2 5:2 7:2 .:4  12:1 12:1 12:1 12:1 13:2 12:2 8:4 7:4  8:2 13:2 12:8 .:4' },
+      A: { chords: [[0, '5'], [0, '5'], [1, '5'], [0, '5'], [5, '5'], [5, '5'], [7, '5'], [7, '5']],
+        bass: '1_1_1.1_1_1_8.1_', arp: [0, 2, 3, 4, 3, 2], drums: 'K.h.k.h.S.h.k.ho' },
+      B: { chords: [[0, '5'], [0, '5'], [1, '5'], [0, '5'], [5, '5'], [5, '5'], [7, '5'], [7, '5']],
+        bass: '1_1_1.1_1_1_8.1_', arp: [0, 2, 3, 4, 3, 2], drums: 'K.h.k.h.S.h.k.ho',
+        lead: '12:3 13:1 12:4 .:2 7:2 5:2 7:2  8:2 13:2 12:4 .:1 12:1 12:1 12:1 .:4  5:2 7:2 8:4 7:2 5:2 .:4  7:2 8:2 7:2 5:2 1:4 0:4' },
+      C: { chords: [[-4, '5'], [-4, '5'], [5, '5'], [5, '5'], [1, '5'], [1, '5'], [7, '5'], [7, '5']],
+        bass: '1_1_1_1_1_1_8_5_', arp: [0, 2, 3, 2], drums: 'K.hhk.h.S.hhk.ho',
+        lead: '20:3 19:1 17:4 20:2 19:2 17:4  17:2 19:2 20:2 24:2 20:4 19:4  25:1 24:3 25:1 24:3 20:4 19:4  19:2 17:2 13:2 12:2 7:8' },
+      D: { chords: [[0, '5'], [0, '5'], [-4, '5'], [-4, '5'], [5, '5'], [7, '5'], [1, '5'], [0, '5']],
+        bass: '1_1_1.1_1_1_8.1_', arp: [0, 2, 3, 4, 3, 2], drums: 'K.h.k.hhS.h.k.ho',
+        lead: '12:1 12:1 12:2 17:2 19:2 20:4 19:2 17:2  20:1 20:1 20:2 19:2 17:2 12:4 13:2 12:2  17:4 19:4 20:2 19:2 17:2 19:2  25:1 24:3 20:4 13:2 12:6' },
     },
     order: ['I', 'A', 'B', 'A', 'B', 'C', 'D', 'D', 'B'], loopFrom: 1,
   },
@@ -156,7 +161,7 @@ export const SONGS = {
   },
 };
 
-const CHORD_TONES = { m: [0, 3, 7, 12, 15, 19], M: [0, 4, 7, 12, 16, 19] };
+const CHORD_TONES = { m: [0, 3, 7, 12, 15, 19], M: [0, 4, 7, 12, 16, 19], 5: [0, 7, 12, 19, 24, 31] };
 const BASS_DEG = { 1: 0, 5: 7, 7: 10, 8: 12 };
 
 // Flatten a song into one entry per step so the sequencer only indexes an array.

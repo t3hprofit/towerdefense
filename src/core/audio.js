@@ -113,7 +113,13 @@ class AudioEngine {
       const m = this.musicGain;
       if (ev.bass) this.tone({ f: hz(ev.bass.semi), type: v.bass, dur: stepLen * ev.bass.len * 0.8, vol: 0.18, dest: m, at: t });
       if (ev.arp !== null) this.tone({ f: hz(ev.arp), type: v.arp, dur: stepLen * 0.8, vol: 0.05, dest: m, at: t });
-      if (ev.lead) { const f = hz(ev.lead.semi), dur = stepLen * ev.lead.len * 0.9; this.tone({ f, type: v.lead, dur, vol: 0.035, attack: 0.02, detune: 6, dest: m, at: t }); this.tone({ f, type: v.lead, dur, vol: 0.035, attack: 0.02, detune: -6, dest: m, at: t }); }
+      if (ev.lead) {
+        const f = hz(ev.lead.semi), dur = stepLen * ev.lead.len * 0.9;
+        // Plucked leads decay on their own clock and get a bright octave on the attack.
+        const env = v.pluck ? { dur, decay: v.pluck, attack: 0.003 } : { dur, attack: 0.02 };
+        this.tone({ f, type: v.lead, ...env, vol: 0.035, detune: 6, dest: m, at: t }); this.tone({ f, type: v.lead, ...env, vol: 0.035, detune: -6, dest: m, at: t });
+        if (v.pluck) this.tone({ f: f * 2, type: 'triangle', dur: 0.15, attack: 0.002, vol: 0.02, dest: m, at: t });
+      }
       const d = ev.drum;
       if (d === 'k' || d === 'K') this.tone({ f: 160, f2: 45, type: 'sine', dur: 0.2, vol: 0.45, dest: m, at: t });
       if (d === 's' || d === 'S') { this.noise({ dur: 0.12, vol: 0.18, hp: 900, lp: 7000, dest: m, at: t }); this.tone({ f: 200, f2: 120, type: 'triangle', dur: 0.08, vol: 0.2, dest: m, at: t }); }
