@@ -28,7 +28,9 @@ export function generateWave(district, wave, tierId = 'netrunner') {
     left -= count * def.pts;
   }
   if (isBoss) {
-    groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: diff * 0.75 * tier.hp, boss: true });
+    // Bosses scale by district order, not the per-map base difficulty, so each one is tougher than the last.
+    const bossMult = (1.2 + 0.3 * (district.num - 1)) * tier.hp;
+    groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: bossMult, boss: true });
   }
   // ICE shields: from wave 4 a rising share of non-boss enemies spawn shielded; bosses always are.
   const iceChance = wave >= 4 ? Math.min(0.6, (0.08 + 0.05 * (wave - 4)) * tier.ice) : 0;

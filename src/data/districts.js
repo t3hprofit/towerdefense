@@ -32,7 +32,7 @@ export const DISTRICTS = [
     ],
     blocked: [[0,0],[8,0],[0,13],[8,13],[8,12],[2,4],[8,4],[0,9]],
     accessPoints: [
-      { id: 'reroute', type: 'REROUTE', c: 8, r: 1, name: 'TRAFFIC CONTROL', cost: 6, cooldown: 12 },
+      { id: 'reroute', type: 'REROUTE', c: 8, r: 1, name: 'TRAFFIC CONTROL', duration: 25, cost: 5, cooldown: 40 },
       { id: 'turret1', type: 'TURRET', c: 4, r: 5, name: 'ARASAKA TURRET', duration: 20, dmg: 22, rate: 4, range: 2.8, cost: 5, cooldown: 40 },
     ],
     roster: [
@@ -90,7 +90,7 @@ export const DISTRICTS = [
     ],
     blocked: [[0,0],[8,0],[0,13],[0,12],[8,13],[8,8],[0,2],[8,2]],
     accessPoints: [
-      { id: 'reroute', type: 'REROUTE', c: 8, r: 1, name: 'MALL SECURITY', cost: 6, cooldown: 12 },
+      { id: 'reroute', type: 'REROUTE', c: 8, r: 1, name: 'MALL SECURITY', duration: 25, cost: 5, cooldown: 40 },
       { id: 'door', type: 'DOOR', c: 4, r: 2, name: 'CHECKPOINT', duration: 4.5, cost: 3, cooldown: 22 },
       { id: 'turret', type: 'TURRET', c: 5, r: 6, name: 'ROGUE TURRET', duration: 22, dmg: 40, rate: 4, range: 3.0, cost: 5, cooldown: 40 },
     ],

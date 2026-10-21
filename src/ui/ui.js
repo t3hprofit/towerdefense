@@ -168,7 +168,7 @@ export class UI {
   openApPanel(ap) {
     this.panelTarget = { kind: 'ap', ap }; this.lastPanelSig = this.panelSig();
     const g = this.game; const p = this.els.panel; p.className = 'panel ap';
-    const eff = { TRAP: `Detonates for ${ap.dmg} damage to everything within ${ap.radius} cells.`, DOOR: `Seals the road for ${ap.duration}s. Ground enemies stop; drones fly over.`, TURRET: `Hijack this turret for ${ap.duration}s. ${ap.dmg} dmg × ${ap.rate}/s, range ${ap.range}.`, REROUTE: `Switch the enemy route. Current: ROUTE ${g.activeRoute === 0 ? 'A' : 'B'}. New spawns take the other road.` }[ap.type];
+    const eff = { TRAP: `Detonates for ${ap.dmg} damage to everything within ${ap.radius} cells.`, DOOR: `Seals the road for ${ap.duration}s. Ground enemies stop; drones fly over.`, TURRET: `Hijack this turret for ${ap.duration}s. ${ap.dmg} dmg × ${ap.rate}/s, range ${ap.range}.`, REROUTE: `Send new spawns down the long road for ${ap.duration}s, then traffic reverts.${ap.active > 0 ? ' ACTIVE · ' + Math.ceil(ap.active) + 's left.' : ''}` }[ap.type];
     const cd = ap.cooldown > 0 ? `REBOOT ${Math.ceil(ap.cooldown)}s` : null;
     p.innerHTML = `<div class="ph"><span class="t" style="color:var(--purple)">ACCESS POINT · ${ap.name}</span><button class="x">✕</button></div>
       <div class="stats">TYPE <b>${ap.type}</b> · COST <b>${ap.cost} RAM</b> · COOLDOWN <b>${ap.cooldownDef}s</b></div><div class="desc">${eff}</div>

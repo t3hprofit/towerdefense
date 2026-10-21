@@ -196,8 +196,8 @@ export class Game {
       case 'DOOR': ap.active = ap.duration; Audio.play('door'); this.ui.toast(`${ap.name} SEALED`, 'pink'); break;
       case 'TURRET': ap.active = ap.duration; Audio.play('ap'); this.ui.toast(`${ap.name} HIJACKED`, 'pink'); this.burst(x, y, '#b14cff', 20, 3); break;
       case 'REROUTE':
-        this.activeRoute = (this.activeRoute + 1) % this.routes.length; Audio.play('ap');
-        this.ui.toast(`ROUTE ${this.activeRoute === 0 ? 'A' : 'B'} ACTIVE · new spawns rerouted`, 'pink'); this.flash = 0.3; break;
+        this.activeRoute = 1; ap.active = ap.duration; Audio.play('ap');
+        this.ui.toast(`REROUTED for ${ap.duration}s · new spawns take the long way`, 'pink'); this.flash = 0.3; break;
     }
     ap.cooldown = ap.cooldownDef;
     this.ui.closePanel(); this.ui.refreshTrays();
@@ -320,7 +320,10 @@ export class Game {
     // Access points
     for (const ap of this.accessPoints) {
       if (ap.cooldown > 0) ap.cooldown -= dt;
-      if (ap.active > 0) { ap.active -= dt; if (ap.type === 'TURRET') this.apTurretFire(ap, dt); }
+      if (ap.active > 0) {
+        ap.active -= dt; if (ap.type === 'TURRET') this.apTurretFire(ap, dt);
+        if (ap.active <= 0 && ap.type === 'REROUTE') { this.activeRoute = 0; this.ui.toast('TRAFFIC RESTORED · route A', 'default'); this.flash = 0.2; }
+      }
     }
     this.updateEnemies(dt);
     this.updateTowers(dt);
