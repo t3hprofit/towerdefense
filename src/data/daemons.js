@@ -5,7 +5,7 @@ export const DAEMONS = {
   datamine3: { id: 'datamine3', name: 'DATAMINE_V3', len: 4, desc: '+€$350 now.', weight: 1, group: 'eddies' },
   icepick:   { id: 'icepick',   name: 'ICEPICK',     len: 3, desc: 'Towers and upgrades cost 20% less for the rest of this district.', weight: 2, once: true },
   massvuln:  { id: 'massvuln',  name: 'MASS VULNERABILITY', len: 3, desc: 'Enemies take +35% damage during the next wave.', weight: 2 },
-  blackwall: { id: 'blackwall', name: 'BLACKWALL ICE', len: 4, desc: 'Enemy netrunners cannot hack for the next 2 waves.', weight: 2 },
+  blackwall: { id: 'blackwall', name: 'BLACKWALL ICE', len: 4, desc: 'Enemy netrunners cannot hack during the next wave.', weight: 1 },
   overclock: { id: 'overclock', name: 'OVERCLOCK',   len: 3, desc: 'All towers fire 50% faster during the next wave.', weight: 2 },
   rampatch:  { id: 'rampatch',  name: 'RAM PATCH',   len: 2, desc: '+4 max RAM for this district and refills RAM.', weight: 2 },
   corerepair:{ id: 'corerepair',name: 'CORE REPAIR', len: 4, desc: 'Restore 4 CORE integrity.', weight: 1 },

@@ -230,7 +230,7 @@ export class Game {
       case 'datamine3': this.eddies += 350; break;
       case 'icepick': this.fx.icepick = true; break;
       case 'massvuln': this.fx.massvuln = 1; break;
-      case 'blackwall': this.fx.blackwall = 2; break;
+      case 'blackwall': this.fx.blackwall = 1; break;
       case 'overclock': this.fx.overclock = 1; break;
       case 'rampatch': this.ramMax += 4; this.ram = this.ramMax; break;
       case 'corerepair': this.lives = Math.min(20, this.lives + 4); break;
