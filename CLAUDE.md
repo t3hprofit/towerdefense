@@ -38,6 +38,7 @@ dependencies. Everything (art, audio, icons) is generated in code. Read this fil
 - Quickhack/tower descriptions live in the strip over the wave bar, **never** as toasts at the top (they covered the spawn row).
 - The game must **not** auto-switch trays. The QUICKHACKS tab pulses when a shielded enemy is present; that is the only prompt.
 - A tap on the field while a panel is open only dismisses the panel. It never builds or casts.
+- A boss reaching the core is an immediate loss, never a 5-core leak.
 - Reroute access points are temporary (25s), not a permanent toggle.
 - Breach charges: 1 to start, +1 after waves 3, 6, 9. The breach does not pause the battlefield.
 - Four tiers: Street Kid / Netrunner / Legend / Blackwall. **Netrunner is the baseline the whole game is tuned around.**
@@ -74,6 +75,7 @@ Playwright is at `/opt/node-tools/node_modules` on the cloud runner; elsewhere i
 - The stop hook wants a clean, pushed tree. If the owner halts a change mid-edit, `git checkout --` the files rather than committing them.
 - Wave composition is seeded by district id + wave number, so changing a roster reshuffles every wave in that district. Re-run the sim after any roster edit.
 - The balance bot scores tower spots by coverage of the *active* route only (`routeMode: 'switch'` maps have an inactive alternate road).
+- The bot is weak at bosses: expect it to reach wave 10 healthy and then lose from Westbrook on. Its wave-9 lives are the signal; bosses are calibrated on the owner's runs. `BOSSDBG=1` shows the fight.
 - Boss HP has its own curve (`1.2 + 0.3 × (district.num − 1)`) independent of the per-map `difficulty`, because lowering a map's base difficulty once made its boss weaker than the previous district's.
 - iOS: `AudioContext` can be `'interrupted'`, not just `'suspended'`. `audio.js` handles both; keep it that way.
 

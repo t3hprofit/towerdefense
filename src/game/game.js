@@ -52,7 +52,7 @@ export class Game {
     this.shake = 0; this.flash = 0;
     this.stats = { kills: 0, hacks: 0, breaches: 0, daemons: 0, built: 0, leaks: 0, purges: 0, apHacks: 0 };
     this.nextWave = generateWave(district, 1, this.tier.id);
-    this.lastKillT = -Infinity; this.waveLeaked = false; this.waveTimer = PREP_FIRST;
+    this.lastKillT = -Infinity; this.waveLeaked = false; this.waveTimer = PREP_FIRST; this.bossLeaked = null;
     Session.beginRun(district.id);
     this.hintsShown = new Set();
     this.ui.onDistrictStart();
@@ -293,7 +293,7 @@ export class Game {
     Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score });
     const extra = { score, best: Math.max(prevBest, score), newBest: score > prevBest, total: Session.state.sessionScore, bestCombo: Session.state.bestCombo };
     Audio.play(won ? 'win' : 'lose');
-    this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives, ...extra });
+    this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives, bossLeaked: this.bossLeaked, ...extra });
   }
 
   // ---------------- Simulation ----------------
@@ -409,7 +409,10 @@ export class Game {
     if (best) { e.hacks.push({ tower: best, p: 0 }); best.hackers = (best.hackers || 0) + 1; }
   }
   leak(e) {
-    e.dead = true; const dmg = e.boss ? 5 : 1; this.lives = Math.max(0, this.lives - dmg); this.stats.leaks++;
+    e.dead = true; this.stats.leaks++;
+    // A boss reaching the core ends the run outright.
+    if (e.boss) { this.dropHacks(e); this.bossLeaked = e.name; this.shake = 1; this.flash = 0.6; Audio.play('leak'); this.ui.toast(`${e.name} REACHED THE CORE`, 'warn', 4000); this.finish(false); return; }
+    const dmg = 1; this.lives = Math.max(0, this.lives - dmg);
     this.shake = Math.max(this.shake, 0.4); this.flash = 0.35; Audio.play('leak');
     this.waveLeaked = true; Session.state.combo = 0; this.lastKillT = -Infinity;
     this.ui.toast(`${e.name} breached the core! -${dmg}`, 'warn');

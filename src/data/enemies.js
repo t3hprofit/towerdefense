@@ -28,5 +28,5 @@ export const ENEMIES = {
   minotaur: { name: 'MINOTAUR',         hp: 6500,  speed: 0.45, armor: 24, reward: 450, size: 0.6, shape: 'hex',  color: '#8a8aa8', tags: ['mech','boss'], boss: true, title: 'Militech Heavy Mech' },
   placide:  { name: 'PLACIDE',          hp: 4800,  speed: 0.75, armor: 10, reward: 500, size: 0.5, shape: 'run',  color: '#b14cff', tags: ['organic','runner','boss'], boss: true, title: 'Voodoo Boys Netrunner',
               hacker: { range: 3.6, time: 1.6, disable: 12, multi: 2 } },
-  smasher:  { name: 'SMASHER',          hp: 12000, speed: 0.6,  armor: 26, reward: 1000, size: 0.62, shape: 'hex', color: '#ff2a6d', tags: ['mech','boss'], boss: true, title: 'Arasaka Full-Borg', regen: 12 },
+  smasher:  { name: 'SMASHER',          hp: 7000,  speed: 0.6,  armor: 26, reward: 1000, size: 0.62, shape: 'hex', color: '#ff2a6d', tags: ['mech','boss'], boss: true, title: 'Arasaka Full-Borg', regen: 3 },
 };

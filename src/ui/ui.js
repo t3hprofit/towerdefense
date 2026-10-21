@@ -242,11 +242,11 @@ export class UI {
   }
 
   // ---------- Results ----------
-  showResult({ won, stars, next, stats, wave, lives, score = 0, best = 0, newBest = false, total = 0, bestCombo = 0 }) {
+  showResult({ won, stars, next, stats, wave, lives, score = 0, best = 0, newBest = false, total = 0, bestCombo = 0, bossLeaked = null }) {
     const g = this.game; const el = this.screens.result; el.classList.remove('hidden'); this.closePanel();
     const starHtml = [1, 2, 3].map(i => `<span class="${stars >= i ? '' : 'off'}">★</span>`).join('');
     el.innerHTML = `<div class="result ${won ? 'win' : 'lose'}"><h1>${won ? 'DISTRICT SECURED' : 'CORE BREACHED'}</h1>
-      <div style="color:var(--dim);letter-spacing:0.2em">${g.district.name} · <span style="color:${g.tier.color}">${g.tier.name}</span> · ${won ? 'WAVE ' + wave + ' COMPLETE' : 'FELL ON WAVE ' + wave}</div>
+      <div style="color:var(--dim);letter-spacing:0.2em">${g.district.name} · <span style="color:${g.tier.color}">${g.tier.name}</span> · ${won ? 'WAVE ' + wave + ' COMPLETE' : bossLeaked ? bossLeaked + ' REACHED THE CORE' : 'FELL ON WAVE ' + wave}</div>
       <div class="bigstars">${starHtml}</div>
       <div class="rstats"><span>SCORE${won ? '' : ' <em style="color:var(--dim);font-style:normal;font-size:10px">(halved on loss)</em>'}</span><span class="sc">${fmtNum(score)}</span><span>BEST</span><span>${fmtNum(best)}${newBest ? '<em class="nb">NEW BEST</em>' : ''}</span><span>SESSION TOTAL</span><span>${fmtNum(total)}</span><span>BEST COMBO</span><span>${bestCombo}</span><span>KILLS</span><span>${stats.kills}</span><span>CORE LEFT</span><span>${lives}/20</span><span>TOWERS BUILT</span><span>${stats.built}</span><span>QUICKHACKS</span><span>${stats.hacks}</span><span>DAEMONS</span><span>${stats.daemons}</span><span>PURGES</span><span>${stats.purges}</span><span>ACCESS POINTS</span><span>${stats.apHacks}</span><span>LEAKS</span><span>${stats.leaks}</span></div>
       ${won && next ? `<div style="color:var(--green)">UNLOCKED: ${next.name}</div>` : ''}

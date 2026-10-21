@@ -19,7 +19,14 @@ Street Kid: 2–3 stars. Legend: mostly losses. Blackwall: losses everywhere.
 The owner is a strong TD player and beats the bot by a wide margin (perfect 20-core clears where
 the bot has 6). Do not tune the global curve to the owner; that is what tiers are for.
 
-Current readings (commit at time of writing):
+**Boss rule (added after the City Center run):** a boss reaching the core is an immediate loss, so
+the bot's wave-10 result now depends on its boss fight. The bot is bad at bosses (it under-upgrades
+and mismanages RAM against shield regen), so from Westbrook on it typically reaches wave 10 with
+14–20 core and then loses to the boss. Read the **wave 9 lives** column as the regular-wave signal
+and use the owner's results for boss calibration. `BOSSDBG=1 TIER=… node tools/sim.mjs hacker <district>`
+prints the boss's HP every 3 s.
+
+Current readings (commit at time of writing, before the boss rule):
 
 | Tier | Watson | Westbrook | Heywood | Santo | Pacifica | Center |
 |---|---|---|---|---|---|---|
@@ -84,7 +91,10 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
    should show >0 towers hacked per district and dozens on Pacifica.
 8. **Early-district RAM feasibility.** Watson/Westbrook have no ICE Deck (owner's decision: it stays
    at Heywood), so the ICE share is capped lower there (22%, 28%).
-9. **Audio**: weapon SFX were a square-wave chirp every 45 ms. Now a separate quieter bus with
+9. **Smasher was unkillable**: 12000 base × 2.7 boss curve = 32400 HP with 12 HP/s regen behind a
+   10% shield; the owner cleared City Center with 15 core and had "barely put a dent" in him when
+   he walked into the core. Now 7000 base (18900 at Netrunner), regen 3, and a boss leak is a loss.
+10. **Audio**: weapon SFX were a square-wave chirp every 45 ms. Now a separate quieter bus with
    longer throttles, plus FULL/LOW/OFF. Tuned without listening; expect another pass.
 
 ## How to tune a specific complaint
