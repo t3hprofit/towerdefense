@@ -1,4 +1,5 @@
 // Fully synthesized audio: no asset files. Everything is oscillators + noise through the WebAudio API.
+const SFX_SCALE = 0.6;
 class AudioEngine {
   constructor() {
     this.ctx = null; this.master = null; this.sfxGain = null; this.musicGain = null;
@@ -12,7 +13,7 @@ class AudioEngine {
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
     this.ctx.onstatechange = () => { if (this.ctx && this.ctx.state === 'interrupted' && !document.hidden) this.ctx.resume().catch(() => {}); };
     this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination);
-    this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = this.sfxOn ? this.sfxLevel : 0; this.sfxGain.connect(this.master);
+    this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = this.sfxOn ? this.sfxLevel * SFX_SCALE : 0; this.sfxGain.connect(this.master);
     // Weapon fire is the repetitive stuff; it gets its own quieter, low-passed bus.
     this.weaponGain = this.ctx.createGain(); this.weaponGain.gain.value = 0.45; const wlp = this.ctx.createBiquadFilter(); wlp.type = 'lowpass'; wlp.frequency.value = 2600; this.weaponGain.connect(wlp); wlp.connect(this.sfxGain);
     this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? 0.35 : 0; this.musicGain.connect(this.master);
@@ -21,7 +22,8 @@ class AudioEngine {
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   }
   // level: 1 = full, 0.5 = low, 0 = off
-  setSfx(level) { const v = level === true ? 1 : level === false ? 0 : Number(level); this.sfxLevel = v > 0 ? v : this.sfxLevel; this.sfxOn = v > 0; if (this.sfxGain) this.sfxGain.gain.value = v; }
+  // FULL (1) maps to 60% of the bus so effects sit a little above the music rather than three times it.
+  setSfx(level) { const v = level === true ? 1 : level === false ? 0 : Number(level); this.sfxLevel = v > 0 ? v : this.sfxLevel; this.sfxOn = v > 0; if (this.sfxGain) this.sfxGain.gain.value = v * SFX_SCALE; }
   setMusic(on) { this.musicOn = on; if (this.musicGain) this.musicGain.gain.value = on ? 0.35 : 0; if (on) this.startMusic(); else this.stopMusic(); }
 
   tone({ f = 440, f2 = null, type = 'square', dur = 0.1, vol = 0.3, attack = 0.005, decay = null, dest = null, delay = 0, at = null }) {
