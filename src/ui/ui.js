@@ -30,9 +30,9 @@ export class UI {
     this.els.btnWave.onclick = () => game.startWave();
     this.els.btnSpeed.onclick = () => { game.speed = game.speed === 1 ? 2 : game.speed === 2 ? 3 : 1; this.els.btnSpeed.textContent = game.speed + '×'; Audio.play('blip'); };
     this.els.btnPause.onclick = () => this.pause(true);
-    $('#btn-resume').onclick = () => this.pause(false);
-    $('#btn-restart').onclick = () => { this.pause(false); game.startDistrict(game.district); };
-    $('#btn-quit').onclick = () => { this.pause(false); this.quit(); };
+    $('#btn-resume').onclick = () => { Audio.init(); this.pause(false); };
+    $('#btn-restart').onclick = () => { Audio.init(); this.pause(false); game.startDistrict(game.district); };
+    $('#btn-quit').onclick = () => { Audio.init(); this.pause(false); this.quit(); };
     this.syncSettings();
     Audio.setSfx(Save.data.settings.sfx); Audio.setMusic(Save.data.settings.music);
   }

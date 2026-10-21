@@ -12,7 +12,8 @@ export class Renderer {
     const rect = this.canvas.parentElement.getBoundingClientRect();
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.w = Math.max(1, Math.floor(rect.width)); this.h = Math.max(1, Math.floor(rect.height));
-    this.canvas.width = this.w * this.dpr; this.canvas.height = this.h * this.dpr;
+    this.canvas.width = Math.round(rect.width * this.dpr); this.canvas.height = Math.round(rect.height * this.dpr);
+    this.vignette = null;
     const g = this.game; this.cs = Math.floor(Math.min(this.w / g.cols, this.h / g.rows));
     this.ox = Math.floor((this.w - this.cs * g.cols) / 2); this.oy = Math.floor((this.h - this.cs * g.rows) / 2);
   }
@@ -39,8 +40,12 @@ export class Renderer {
     for (let y = 0; y < this.h; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(this.w, y); ctx.stroke(); }
   }
   drawVignette() {
-    const ctx = this.ctx; const grd = ctx.createRadialGradient(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.4, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75);
-    grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.55)'); ctx.fillStyle = grd; ctx.fillRect(0, 0, this.w, this.h);
+    const ctx = this.ctx;
+    if (!this.vignette) {
+      const grd = ctx.createRadialGradient(this.w / 2, this.h / 2, Math.min(this.w, this.h) * 0.4, this.w / 2, this.h / 2, Math.max(this.w, this.h) * 0.75);
+      grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.55)'); this.vignette = grd;
+    }
+    ctx.fillStyle = this.vignette; ctx.fillRect(0, 0, this.w, this.h);
   }
   drawGrid() {
     const ctx = this.ctx, g = this.game, cs = this.cs;

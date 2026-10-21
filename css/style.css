@@ -3,7 +3,7 @@
   --cyan: #00f0ff; --pink: #ff2a6d; --yellow: #fcee0a; --purple: #b14cff; --green: #39ff14; --orange: #ff8c1a; --red: #ff3b3b;
   --text: #f4f4ff; --dim: #8a8aa8; --line: rgba(0, 240, 255, 0.25);
   --font: "Rajdhani", "Orbitron", "Avenir Next Condensed", "Helvetica Neue", Arial, sans-serif;
-  --mono: "SF Mono", Menlo, Consolas, monospace;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px); --sar: env(safe-area-inset-right, 0px);
 }
@@ -13,14 +13,14 @@ body { position: fixed; inset: 0; touch-action: none; }
 button { font-family: inherit; color: inherit; }
 .hidden { display: none !important; }
 
-#app { position: absolute; inset: 0; display: flex; flex-direction: column; padding-top: var(--sat); padding-bottom: var(--sab); }
+#app { position: absolute; inset: 0; display: flex; flex-direction: column; padding-left: var(--sal); padding-right: var(--sar); }
 #field { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 #game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 
 /* ---------- HUD ---------- */
 .hud { flex: 0 0 auto; background: linear-gradient(180deg, rgba(8,8,18,0.98), rgba(8,8,18,0.92)); border-bottom: 1px solid var(--line); z-index: 5; }
-#hud-top { order: -1; display: flex; align-items: center; gap: 6px; padding: 6px 8px; font-size: 14px; }
-#hud-bottom { border-top: 1px solid var(--line); border-bottom: none; padding: 6px 8px 6px; }
+#hud-top { order: -1; display: flex; align-items: center; gap: 6px; padding: calc(6px + var(--sat)) 8px 6px; font-size: 14px; }
+#hud-bottom { border-top: 1px solid var(--line); border-bottom: none; padding: 6px 8px calc(6px + var(--sab)); }
 .stat { display: flex; flex-direction: column; line-height: 1; min-width: 34px; }
 .stat .lbl { font-size: 9px; letter-spacing: 0.15em; color: var(--dim); }
 .stat .val { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -38,21 +38,21 @@ button { font-family: inherit; color: inherit; }
 .ramfill { height: 100%; width: 0%; background: linear-gradient(90deg, #0090a0, var(--cyan)); transition: width 0.15s linear; box-shadow: 0 0 8px var(--cyan); }
 .ramtxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: #fff; text-shadow: 0 0 3px #000; }
 .hudbtns { display: flex; gap: 4px; }
-.ibtn { width: 32px; height: 34px; border: 1px solid var(--line); background: rgba(0,240,255,0.06); color: var(--cyan); font-weight: 700; font-size: 14px; }
+.ibtn { width: 36px; height: 36px; border: 1px solid var(--line); background: rgba(0,240,255,0.06); color: var(--cyan); font-weight: 700; font-size: 14px; }
 .ibtn:active { background: rgba(0,240,255,0.25); }
 
 .tabs { display: flex; gap: 6px; margin-bottom: 6px; }
-.tab { flex: 1; height: 30px; border: 1px solid var(--line); background: transparent; color: var(--dim); font-weight: 700; letter-spacing: 0.1em; font-size: 12px; }
+.tab { flex: 1; height: 36px; border: 1px solid var(--line); background: transparent; color: var(--dim); font-weight: 700; letter-spacing: 0.1em; font-size: 12px; }
 .tab.active { color: var(--cyan); background: rgba(0,240,255,0.12); border-color: var(--cyan); }
 .tab.breach { color: var(--pink); border-color: rgba(255,42,109,0.4); }
 .tab.breach:disabled { opacity: 0.35; }
 .tab.breach:not(:disabled) { animation: pulsePink 1.2s infinite; background: rgba(255,42,109,0.12); }
 
-.tray { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; touch-action: pan-x; }
+.tray { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; touch-action: pan-x; overscroll-behavior: contain; }
 .tray::-webkit-scrollbar { display: none; }
-.tbtn { flex: 0 0 auto; width: 68px; height: 64px; border: 1px solid var(--line); background: rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; padding: 2px; }
+.tbtn { flex: 0 0 auto; width: 72px; height: 64px; border: 1px solid var(--line); background: rgba(255,255,255,0.03); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; padding: 2px; }
 .tbtn .glyph { font-size: 20px; line-height: 1; font-weight: 700; }
-.tbtn .nm { font-size: 9px; letter-spacing: 0.05em; color: var(--text); white-space: nowrap; }
+.tbtn .nm { font-size: 8.5px; letter-spacing: 0.05em; color: var(--text); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .tbtn .cost { font-size: 11px; font-weight: 700; color: var(--yellow); }
 .tbtn.hack .cost { color: var(--cyan); }
 .tbtn.sel { border-color: var(--yellow); background: rgba(252,238,10,0.12); box-shadow: 0 0 10px rgba(252,238,10,0.3) inset; }
@@ -80,8 +80,8 @@ button { font-family: inherit; color: inherit; }
 .btn.yellow { border-color: var(--yellow); color: var(--yellow); background: rgba(252,238,10,0.08); }
 
 /* ---------- Screens ---------- */
-.screen { position: absolute; inset: 0; z-index: 20; touch-action: pan-y; background: radial-gradient(ellipse at 50% 20%, #161330 0%, var(--bg) 65%); display: flex; flex-direction: column; padding: calc(var(--sat) + 10px) 14px calc(var(--sab) + 14px); overflow-y: auto; }
-.screen.overlay { background: rgba(4,4,10,0.86); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 30; }
+.screen { position: absolute; inset: 0; z-index: 20; touch-action: pan-y; background: radial-gradient(ellipse at 50% 20%, #161330 0%, var(--bg) 65%); display: flex; flex-direction: column; padding: calc(var(--sat) + 10px) calc(14px + var(--sar)) calc(var(--sab) + 14px) calc(14px + var(--sal)); overflow-y: auto; overscroll-behavior: contain; }
+.screen.overlay { background: rgba(4,4,10,0.93); z-index: 30; }
 .menu-inner { margin: auto; display: flex; flex-direction: column; align-items: center; gap: 28px; width: 100%; max-width: 420px; }
 .menu-btns { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; }
 .menu-btns .row { display: flex; gap: 10px; }
@@ -124,7 +124,7 @@ button { font-family: inherit; color: inherit; }
 .panel { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 12; background: var(--panel); border: 1px solid var(--cyan); box-shadow: 0 0 20px rgba(0,240,255,0.25); padding: 10px 12px; font-size: 13px; }
 .panel .ph { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .panel .ph .t { font-size: 15px; font-weight: 700; letter-spacing: 0.12em; }
-.panel .ph .x { background: none; border: none; font-size: 18px; color: var(--dim); padding: 0 6px; }
+.panel .ph .x { background: none; border: none; font-size: 20px; color: var(--dim); padding: 6px 10px; margin: -6px -10px -6px 0; min-width: 44px; min-height: 40px; }
 .panel .stats { display: flex; gap: 10px; flex-wrap: wrap; color: var(--dim); font-size: 11px; margin-bottom: 8px; }
 .panel .stats b { color: var(--text); }
 .panel .desc { color: #c8c8e0; margin-bottom: 8px; }
@@ -188,9 +188,15 @@ button { font-family: inherit; color: inherit; }
 .result .menu-btns { max-width: 300px; }
 
 /* ---------- Scanlines ---------- */
-#scanlines { pointer-events: none; position: fixed; inset: 0; z-index: 50; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px); mix-blend-mode: multiply; opacity: 0.6; }
+#scanlines { pointer-events: none; position: fixed; inset: 0; z-index: 50; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 3px); opacity: 0.6; }
 
 @media (max-height: 640px) {
   .logo-main { font-size: 56px; }
   .tbtn { height: 56px; width: 62px; }
 }
+
+/* ---------- Landscape guard (iOS ignores manifest orientation) ---------- */
+#rotate { display: none; position: fixed; inset: 0; z-index: 60; background: var(--bg); color: var(--cyan); align-items: center; justify-content: center; flex-direction: column; gap: 10px; letter-spacing: 0.3em; font-weight: 700; text-align: center; padding: 20px; }
+#rotate .ico { font-size: 48px; letter-spacing: 0; animation: spinHint 1.6s ease-in-out infinite; }
+@keyframes spinHint { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } }
+@media (orientation: landscape) and (max-height: 500px) { #rotate { display: flex; } }

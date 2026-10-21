@@ -6,9 +6,11 @@ class AudioEngine {
     this.noiseBuf = null; this.lastPlayed = {};
   }
   init() {
-    if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
+    if (this.ctx) { if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {}); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     this.ctx = new AC();
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+    this.ctx.onstatechange = () => { if (this.ctx && this.ctx.state === 'interrupted' && !document.hidden) this.ctx.resume().catch(() => {}); };
     this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination);
     this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = this.sfxOn ? 1 : 0; this.sfxGain.connect(this.master);
     this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? 0.35 : 0; this.musicGain.connect(this.master);
@@ -19,9 +21,9 @@ class AudioEngine {
   setSfx(on) { this.sfxOn = on; if (this.sfxGain) this.sfxGain.gain.value = on ? 1 : 0; }
   setMusic(on) { this.musicOn = on; if (this.musicGain) this.musicGain.gain.value = on ? 0.35 : 0; if (on) this.startMusic(); else this.stopMusic(); }
 
-  tone({ f = 440, f2 = null, type = 'square', dur = 0.1, vol = 0.3, attack = 0.005, decay = null, dest = null, delay = 0 }) {
+  tone({ f = 440, f2 = null, type = 'square', dur = 0.1, vol = 0.3, attack = 0.005, decay = null, dest = null, delay = 0, at = null }) {
     if (!this.ctx) return;
-    const t0 = this.ctx.currentTime + delay;
+    const t0 = at !== null ? Math.max(at, this.ctx.currentTime) : this.ctx.currentTime + delay;
     const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
     o.type = type; o.frequency.setValueAtTime(f, t0);
     if (f2 !== null) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t0 + dur);
@@ -83,11 +85,12 @@ class AudioEngine {
     const stepLen = 0.14;
     const tick = () => {
       if (!this.ctx) return;
+      // If timers stalled (background, throttling), skip ahead instead of bursting every missed note.
+      if (this.nextNoteTime < this.ctx.currentTime) this.nextNoteTime = this.ctx.currentTime + 0.05;
       while (this.nextNoteTime < this.ctx.currentTime + 0.3) {
         const t = this.nextNoteTime; const s = this.step;
-        if (s % 2 === 0) this.tone({ f: bass[Math.floor(s / 4) % bass.length], type: 'sawtooth', dur: stepLen * 1.6, vol: 0.18, dest: this.musicGain, delay: t - this.ctx.currentTime });
-        this.tone({ f: arp[s % arp.length] * (Math.floor(s / 32) % 2 ? 1.5 : 1), type: 'square', dur: stepLen * 0.8, vol: 0.05, dest: this.musicGain, delay: t - this.ctx.currentTime });
-        if (s % 8 === 4) this.noise({ dur: 0.08, vol: 0.0, hp: 3000 });
+        if (s % 2 === 0) this.tone({ f: bass[Math.floor(s / 4) % bass.length], type: 'sawtooth', dur: stepLen * 1.6, vol: 0.18, dest: this.musicGain, at: t });
+        this.tone({ f: arp[s % arp.length] * (Math.floor(s / 32) % 2 ? 1.5 : 1), type: 'square', dur: stepLen * 0.8, vol: 0.05, dest: this.musicGain, at: t });
         this.nextNoteTime += stepLen; this.step++;
       }
     };

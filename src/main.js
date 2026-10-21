@@ -16,10 +16,13 @@ window.__onResize = () => renderer.resize();
 window.addEventListener('resize', () => renderer.resize());
 window.addEventListener('orientationchange', () => setTimeout(() => renderer.resize(), 150));
 if (window.visualViewport) window.visualViewport.addEventListener('resize', () => renderer.resize());
+// Catches HUD height changes and stale iOS viewports after rotation.
+if (window.ResizeObserver) new ResizeObserver(() => renderer.resize()).observe(document.getElementById('field'));
 
 // ---------- Input (pointer events cover touch + mouse) ----------
 let downPos = null;
 canvas.addEventListener('pointerdown', (e) => {
+  if (!e.isPrimary) return;
   Audio.init();
   downPos = { x: e.clientX, y: e.clientY, t: performance.now() };
   const rect = canvas.getBoundingClientRect(); const w = renderer.toWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -31,7 +34,7 @@ canvas.addEventListener('pointermove', (e) => {
   game.hoverCell = { c: Math.floor(w.x), r: Math.floor(w.y) };
 }, { passive: true });
 canvas.addEventListener('pointerup', (e) => {
-  if (!downPos) return;
+  if (!downPos || !e.isPrimary) return;
   const moved = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y); downPos = null;
   if (moved > 14) return; // drag, not a tap
   const rect = canvas.getBoundingClientRect(); const w = renderer.toWorld(e.clientX - rect.left, e.clientY - rect.top);
@@ -40,6 +43,13 @@ canvas.addEventListener('pointerup', (e) => {
 canvas.addEventListener('pointercancel', () => { downPos = null; });
 document.addEventListener('gesturestart', (e) => e.preventDefault());
 document.addEventListener('dblclick', (e) => e.preventDefault());
+// iOS: unlock audio on the first real activation (touchend/click), enable :active styles.
+document.addEventListener('touchend', () => Audio.init(), { capture: true, passive: true });
+document.addEventListener('click', () => Audio.init(), { capture: true });
+document.addEventListener('touchstart', () => {}, { passive: true });
+// Landscape guard: pause while the rotate overlay is showing.
+const landscapeMq = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
+landscapeMq.addEventListener('change', (e) => { if (e.matches && game.state === 'play') ui.pause(true); });
 
 // Keyboard shortcuts for desktop testing
 window.addEventListener('keydown', (e) => {
@@ -52,7 +62,12 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Pause when backgrounded (phone lock, app switch)
-document.addEventListener('visibilitychange', () => { if (document.hidden && game.state === 'play') ui.pause(true); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (game.state === 'play') ui.pause(true); return; }
+  // Back from lock / app switch: resume audio and check for a new version.
+  if (Audio.ctx) Audio.init();
+  if (swReg) swReg.update().catch(() => {});
+});
 
 // ---------- Main loop ----------
 let last = performance.now();
@@ -67,8 +82,12 @@ requestAnimationFrame(frame);
 ui.showScreen('menu');
 
 // ---------- PWA ----------
+let swReg = null;
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').then(r => { swReg = r; }).catch(() => {}));
+  // When a new version takes over, reload only while nothing is in progress.
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && game.state === 'menu') location.reload(); hadController = true; });
 }
 // Expose for debugging / automated tests
 window.__ncb = { game, ui, renderer, Save, Audio, Session };
