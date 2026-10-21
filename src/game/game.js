@@ -164,7 +164,8 @@ export class Game {
   castHack(qh, e) {
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
     this.ram -= qh.cost; this.stats.hacks++;
-    if (e.ice) { e.ice = false; e.iceRegen = this.tier.bossRegen; this.addScore(SCORE_ICE); this.text(e.x, e.y - 0.7, 'ICE BROKEN', '#00f0ff', 1.2); this.ring(e.x, e.y, 0.9, '#00f0ff'); Audio.play('purge'); }
+    if (e.ice) { e.ice = false; e.iceRegen = this.tier.bossRegen; this.addScore(SCORE_ICE); this.text(e.x, e.y - 0.7, 'ICE BROKEN', '#00f0ff', 1.2);
+      if (this.tier.iceRefund) { this.ram = Math.min(this.ramMax, this.ram + this.tier.iceRefund); this.text(e.x, e.y - 1.1, `+${this.tier.iceRefund} RAM`, '#00f0ff', 0.9); } this.ring(e.x, e.y, 0.9, '#00f0ff'); Audio.play('purge'); }
     const organic = e.tags.includes('organic'), mech = e.tags.includes('mech') || e.tags.includes('drone');
     switch (qh.id) {
       case 'short': this.damage(e, mech ? 180 : 90, { pierce: true, kind: 'hack' }); this.zap(e.x, e.y - 2.5, e.x, e.y, '#00f0ff'); break;
@@ -285,7 +286,8 @@ export class Game {
     const idx = DISTRICTS.indexOf(this.district); const next = DISTRICTS[idx + 1];
     if (won) this.addScore(this.lives * SCORE_LIFE);
     Session.endRun({ won });
-    const score = Session.state.runScore; const prevBest = Save.district(this.district.id).bestScore || 0;
+    // A loss banks half its score so a high-tier wipe cannot outrank a real clear.
+    const score = won ? Session.state.runScore : Math.round(Session.state.runScore * 0.5); const prevBest = Save.district(this.district.id).bestScore || 0;
     Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score });
     const extra = { score, best: Math.max(prevBest, score), newBest: score > prevBest, total: Session.state.sessionScore, bestCombo: Session.state.bestCombo };
     Audio.play(won ? 'win' : 'lose');

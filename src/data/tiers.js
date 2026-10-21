@@ -1,9 +1,9 @@
 // Difficulty tiers. 'netrunner' is the baseline tuning; the others scale from it.
 export const TIERS = {
-  street:    { id: 'street',    name: 'STREET KID', color: '#39ff14', desc: 'Softer enemies, fewer of them, light ICE.', hp: 0.7, count: 0.8, speed: 1.0, ice: 0.6, bossRegen: 14, score: 1.0 },
-  netrunner: { id: 'netrunner', name: 'NETRUNNER',  color: '#00f0ff', desc: 'The intended challenge. Hacking is mandatory.', hp: 1.0, count: 1.0, speed: 1.0, ice: 1.0, bossRegen: 10, score: 1.5 },
-  legend:    { id: 'legend',    name: 'LEGEND',     color: '#ff2a6d', desc: 'Tougher, faster, more of everything. Shields everywhere.', hp: 1.5, count: 1.25, speed: 1.08, ice: 1.5, bossRegen: 7, score: 2.5 },
-  blackwall: { id: 'blackwall', name: 'BLACKWALL', color: '#fcee0a', desc: 'Past the wall. Nothing here is fair.', hp: 1.8, count: 1.35, speed: 1.12, ice: 1.8, bossRegen: 6, score: 4.0 },
+  street:    { id: 'street',    name: 'STREET KID', color: '#39ff14', desc: 'Softer enemies, fewer of them, light ICE.', hp: 0.7, count: 0.8, speed: 1.0, ice: 0.6, bossRegen: 14, score: 1.0, iceRefund: 0 },
+  netrunner: { id: 'netrunner', name: 'NETRUNNER',  color: '#00f0ff', desc: 'The intended challenge. Hacking is mandatory.', hp: 1.0, count: 1.0, speed: 1.0, ice: 1.0, bossRegen: 10, score: 1.5, iceRefund: 0 },
+  legend:    { id: 'legend',    name: 'LEGEND',     color: '#ff2a6d', desc: 'Tougher, faster, more of everything. Shields everywhere.', hp: 1.5, count: 1.25, speed: 1.08, ice: 1.5, bossRegen: 7, score: 2.5, iceRefund: 1 },
+  blackwall: { id: 'blackwall', name: 'BLACKWALL', color: '#fcee0a', desc: 'Past the wall. Nothing here is fair.', hp: 1.8, count: 1.35, speed: 1.12, ice: 1.8, bossRegen: 6, score: 4.0, iceRefund: 1.5 },
 };
 export const TIER_ORDER = ['street', 'netrunner', 'legend', 'blackwall'];
 export function tierById(id) { return TIERS[id] || TIERS.street; }
