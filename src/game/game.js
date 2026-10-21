@@ -79,7 +79,7 @@ export class Game {
   }
   enemyNear(x, y, radius = 0.6) {
     let best = null, bd = radius;
-    for (const e of this.enemies) { const d = Math.hypot(e.x - x, e.y - y) - e.size * 0.5; if (d < bd) { bd = d; best = e; } }
+    for (const e of this.enemies) { if (e.dead) continue; const d = Math.hypot(e.x - x, e.y - y) - e.size * 0.5; if (d < bd) { bd = d; best = e; } }
     return best;
   }
 
@@ -159,13 +159,15 @@ export class Game {
       case 'short': this.damage(e, mech ? 180 : 90, { pierce: true, kind: 'hack' }); this.zap(e.x, e.y - 2.5, e.x, e.y, '#00f0ff'); break;
       case 'overheat': e.burn = Math.max(e.burn, 6); e.burnDps = Math.max(e.burnDps, organic ? 27 : 18); break;
       case 'reboot': e.blind = 4; break;
-      case 'malfunc': e.stun = Math.max(e.stun, e.boss ? 1 : 3); e.hacks = []; Audio.play('stun'); break;
+      case 'malfunc': e.stun = Math.max(e.stun, e.boss ? 1 : 3); this.dropHacks(e); Audio.play('stun'); break;
       case 'contagion': e.contagion = 7; e.contagionDps = 10; e.spreadTick = 1; break;
     }
     Audio.play('hack'); this.burst(e.x, e.y, qh.color, 12, 2);
     this.text(e.x, e.y - 0.4, qh.name, qh.color);
     this.ui.refreshTrays();
   }
+
+  dropHacks(e) { for (const hk of e.hacks) { hk.tower.hackers = Math.max(0, hk.tower.hackers - 1); hk.tower.hackProgress = 0; } e.hacks = []; }
 
   // ---------------- Access points ----------------
   jackIn(ap) {
@@ -176,7 +178,7 @@ export class Game {
     switch (ap.type) {
       case 'TRAP': {
         let n = 0;
-        for (const e of this.enemies.slice()) if (Math.hypot(e.x - x, e.y - y) <= ap.radius) { this.damage(e, ap.dmg, { pierce: true, kind: 'trap' }); n++; }
+        for (const e of this.enemies.slice()) if (!e.dead && Math.hypot(e.x - x, e.y - y) <= ap.radius) { this.damage(e, ap.dmg, { pierce: true, kind: 'trap' }); n++; }
         this.burst(x, y, '#ff8c1a', 40, 4.5); this.ring(x, y, ap.radius, '#ff8c1a'); this.shake = 0.5; Audio.play('boom');
         this.ui.toast(`${ap.name} DETONATED${n ? ' · ' + n + ' hit' : ''}`, 'pink'); break;
       }
@@ -191,7 +193,7 @@ export class Game {
   }
 
   // ---------------- Breach ----------------
-  canBreach() { return this.state === 'play' && !this.waveActive && this.breachAvailable; }
+  canBreach() { return this.state === 'play' && !this.paused && !this.waveActive && this.breachAvailable; }
   openBreach() {
     if (!this.canBreach()) return;
     const rng = makeRng(hashStr(this.district.id + ':breach:' + this.wave + ':' + Date.now()));
@@ -225,7 +227,7 @@ export class Game {
 
   // ---------------- Waves ----------------
   startWave() {
-    if (this.state !== 'play' || this.waveActive || this.wave >= this.district.waves) return;
+    if (this.state !== 'play' || this.paused || this.waveActive || this.wave >= this.district.waves) return;
     this.wave++; this.waveActive = true; this.waveTime = 0; this.waveLeaked = false; this.breachAvailable = false;
     const w = this.nextWave; this.spawnList = scheduleWave(w); this.currentWave = w;
     this.selectedTower = null; this.ui.closePanel();
@@ -275,7 +277,7 @@ export class Game {
     if (this.state === 'breach') { this.breach?.tick(dtReal); this.ui.tickBreach(this.breach); if (this.breach?.done && !this.breach.timeLeft) { /* let ui close */ } return; }
     if (this.state !== 'play' || this.paused) return;
     let dt = dtReal * this.speed;
-    while (dt > 0) { const step = Math.min(dt, 1 / 60); this.step(step); dt -= step; }
+    while (dt > 0 && this.state === 'play') { const step = Math.min(dt, 1 / 60); this.step(step); dt -= step; }
   }
   step(dt) {
     this.time += dt;
@@ -375,18 +377,18 @@ export class Game {
     this.shake = Math.max(this.shake, 0.4); this.flash = 0.35; Audio.play('leak');
     this.waveLeaked = true; Session.state.combo = 0; this.lastKillT = -Infinity;
     this.ui.toast(`${e.name} breached the core! -${dmg}`, 'warn');
-    for (const hk of e.hacks) { hk.tower.hackers = Math.max(0, hk.tower.hackers - 1); hk.tower.hackProgress = 0; }
+    this.dropHacks(e);
   }
-  damage(e, amount, { pierce = false, kind = 'bullet' } = {}) {
+  damage(e, amount, { pierce = false, kind = 'bullet', src = null } = {}) {
     if (e.dead) return 0;
     let a = amount;
     if (!pierce) a = Math.max(amount * 0.25, amount - e.armor);
     if (this.fx.massvuln > 0) a *= 1.35;
     e.hp -= a; if (kind !== 'dot') e.hitFlash = 0.08;
-    if (e.hp <= 0) this.kill(e);
+    if (e.hp <= 0) this.kill(e, src);
     return a;
   }
-  kill(e) {
+  kill(e, src = null) {
     e.dead = true;
     let reward = e.reward; if (this.fx.bounty > 0) reward = Math.round(reward * 1.6);
     this.eddies += reward; this.stats.kills++;
@@ -394,8 +396,8 @@ export class Game {
     this.text(e.x, e.y - 0.3, `+${reward}`, '#fcee0a', e.boss ? 1.6 : 1);
     this.burst(e.x, e.y, e.color, e.boss ? 60 : 10, e.boss ? 5 : 2.2);
     if (e.boss) { this.shake = 0.9; this.ring(e.x, e.y, 2.5, e.color); Audio.play('boom'); this.ui.toast(`${e.name} NEUTRALIZED`, 'good', 3000); } else Audio.play('kill');
-    for (const hk of e.hacks) { hk.tower.hackers = Math.max(0, hk.tower.hackers - 1); hk.tower.hackProgress = 0; }
-    for (const t of this.towers) if (t.lastTargetId === e.id) t.kills++;
+    this.dropHacks(e);
+    if (src) src.kills++;
   }
   // Score multiplier from the current combo: x1.0 up to x3.5.
   comboMult(combo = Session.state.combo) { return Math.min(MULT_CAP, 1 + Math.floor(combo / 5) * 0.5); }
@@ -425,7 +427,7 @@ export class Game {
         const targets = this.enemies.filter(e => Math.hypot(e.x - t.x, e.y - t.y) <= s.range + e.size * 0.5);
         if (targets.length) {
           const first = targets.reduce((a, b) => a.dist > b.dist ? a : b); t.angle = Math.atan2(first.y - t.y, first.x - t.x); t.lastTargetId = first.id;
-          for (const e of targets) { const organic = e.tags.includes('organic'); this.damage(e, s.dmg * dt * (organic ? 1.3 : 0.8), { pierce: true, kind: 'dot' }); e.burn = Math.max(e.burn, 1.5); e.burnDps = Math.max(e.burnDps, s.burn); }
+          for (const e of targets) { const organic = e.tags.includes('organic'); this.damage(e, s.dmg * dt * (organic ? 1.3 : 0.8), { pierce: true, kind: 'dot', src: t }); e.burn = Math.max(e.burn, 1.5); e.burnDps = Math.max(e.burnDps, s.burn); }
           t.flameTick -= dt; if (t.flameTick <= 0) { t.flameTick = 0.05; this.flame(t.x, t.y, t.angle, s.range); Audio.play('flame'); }
         }
         continue;
@@ -434,22 +436,22 @@ export class Game {
       const target = this.firstInRange(t.x, t.y, s.range);
       if (!target) continue;
       t.cooldown = 1 / s.rate; t.angle = Math.atan2(target.y - t.y, target.x - t.x); t.lastTargetId = target.id;
-      if (t.type === 'smg') { this.damage(target, s.dmg); this.tracer(t, target, '#00f0ff'); Audio.play('shoot'); this.spark(target.x, target.y, '#00f0ff'); }
-      else if (t.type === 'sniper') { this.damage(target, s.dmg, { pierce: true }); this.tracer(t, target, '#fcee0a', 2.5); Audio.play('sniper'); this.burst(target.x, target.y, '#fcee0a', 6, 1.6); }
+      if (t.type === 'smg') { this.damage(target, s.dmg, { src: t }); this.tracer(t, target, '#00f0ff'); Audio.play('shoot'); this.spark(target.x, target.y, '#00f0ff'); }
+      else if (t.type === 'sniper') { this.damage(target, s.dmg, { pierce: true, src: t }); this.tracer(t, target, '#fcee0a', 2.5); Audio.play('sniper'); this.burst(target.x, target.y, '#fcee0a', 6, 1.6); }
       else if (t.type === 'tesla') {
         let cur = target, prev = { x: t.x, y: t.y }; const hit = new Set();
         for (let i = 0; i < s.chain; i++) {
           if (!cur) break; hit.add(cur);
           this.zap(prev.x, prev.y, cur.x, cur.y, '#b14cff');
           const mech = cur.tags.includes('mech') || cur.tags.includes('drone');
-          this.damage(cur, s.dmg * Math.pow(0.85, i) * (mech ? 1.6 : 1), { pierce: true });
+          this.damage(cur, s.dmg * Math.pow(0.85, i) * (mech ? 1.6 : 1), { pierce: true, src: t });
           prev = cur;
           let nx = null, nd = 1.7; for (const e of this.enemies) if (!hit.has(e) && !e.dead) { const d = Math.hypot(e.x - cur.x, e.y - cur.y); if (d < nd) { nd = d; nx = e; } }
           cur = nx;
         }
         Audio.play('zap');
       }
-      else if (t.type === 'rocket') { this.projectiles.push({ x: t.x, y: t.y, target, tx: target.x, ty: target.y, speed: 6.5, dmg: s.dmg, splash: s.splash, trail: 0 }); Audio.play('rocket'); }
+      else if (t.type === 'rocket') { this.projectiles.push({ x: t.x, y: t.y, target, tx: target.x, ty: target.y, speed: 6.5, dmg: s.dmg, splash: s.splash, trail: 0, src: t }); Audio.play('rocket'); }
     }
   }
   apTurretFire(ap, dt) {
@@ -466,7 +468,7 @@ export class Game {
       p.trail -= dt; if (p.trail <= 0) { p.trail = 0.03; this.particles.push({ x: p.x, y: p.y, vx: 0, vy: 0, life: 0.3, max: 0.3, color: '#ff8c1a', size: 2.5, type: 'dot' }); }
       if (d <= mv) {
         p.x = p.tx; p.y = p.ty; p.dead = true;
-        for (const e of this.enemies) if (Math.hypot(e.x - p.x, e.y - p.y) <= p.splash + e.size * 0.5) this.damage(e, p.dmg);
+        for (const e of this.enemies) if (!e.dead && Math.hypot(e.x - p.x, e.y - p.y) <= p.splash + e.size * 0.5) this.damage(e, p.dmg, { src: p.src });
         this.burst(p.x, p.y, '#ff2a6d', 18, 3); this.ring(p.x, p.y, p.splash, '#ff2a6d'); this.shake = Math.max(this.shake, 0.12); Audio.play('boom');
       } else { p.x += dx / d * mv; p.y += dy / d * mv; p.ang = Math.atan2(dy, dx); }
     }

@@ -24,7 +24,7 @@ export class UI {
     $('#btn-back-menu').onclick = () => this.showScreen('menu');
     $('#btn-sfx').onclick = () => { const v = !Save.data.settings.sfx; Save.setSetting('sfx', v); Audio.init(); Audio.setSfx(v); this.syncSettings(); Audio.play('blip'); };
     $('#btn-music').onclick = () => { const v = !Save.data.settings.music; Save.setSetting('music', v); Audio.init(); Audio.setMusic(v); this.syncSettings(); };
-    $('#btn-reset').onclick = () => { if (confirm('Wipe all progress?')) { Save.reset(); this.syncSettings(); this.toast('Save wiped', 'warn'); } };
+    $('#btn-reset').onclick = () => { if (confirm('Wipe all progress?')) { Save.reset(); Audio.setSfx(Save.data.settings.sfx); Audio.setMusic(Save.data.settings.music); this.syncSettings(); this.toast('Save wiped', 'warn'); } };
     document.querySelectorAll('.tab[data-tab]').forEach(b => b.onclick = () => this.setTab(b.dataset.tab));
     this.els.btnBreach.onclick = () => { Audio.play('blip'); game.openBreach(); };
     this.els.btnWave.onclick = () => game.startWave();
@@ -103,6 +103,7 @@ export class UI {
   // Called every frame; only touches the DOM when a value changed.
   refreshHud() {
     const g = this.game; if (!g.district) return;
+    this.refreshPanel();
     const set = (k, v) => { if (this.lastHud[k] !== v) { this.lastHud[k] = v; const el = this.els.top.querySelector(`[data-v="${k}"]`); if (el) el.textContent = v; } };
     set('eddies', Math.floor(g.eddies)); set('lives', g.lives); set('wave', `${g.wave}/${g.district.waves}`);
     set('score', fmtScore(Session.state.runScore));
@@ -119,8 +120,21 @@ export class UI {
   }
 
   // ---------- Panels ----------
-  closePanel() { this.els.panel.classList.add('hidden'); this.els.panel.innerHTML = ''; this.els.panel.className = 'panel hidden'; }
+  closePanel() { this.panelTarget = null; this.els.panel.classList.add('hidden'); this.els.panel.innerHTML = ''; this.els.panel.className = 'panel hidden'; }
+  // Signature of the state a panel depends on; when it changes the panel is redrawn.
+  panelSig() {
+    const g = this.game, p = this.panelTarget; if (!p) return '';
+    if (p.kind === 'tower') { const t = p.t; if (!g.towers.includes(t)) return 'gone'; return [t.offline > 0, Math.ceil(t.offline), g.isFirewalled(t), t.level, g.ram >= QUICKHACKS.purge.cost, t.kills].join('|'); }
+    const ap = p.ap; return [ap.cooldown > 0, Math.ceil(ap.cooldown), g.ram >= ap.cost, g.activeRoute].join('|');
+  }
+  refreshPanel() {
+    const p = this.panelTarget; if (!p) return;
+    const sig = this.panelSig(); if (sig === this.lastPanelSig) return;
+    if (sig === 'gone') { this.closePanel(); return; }
+    if (p.kind === 'tower') this.openTowerPanel(p.t); else this.openApPanel(p.ap);
+  }
   openTowerPanel(t) {
+    this.panelTarget = { kind: 'tower', t }; this.lastPanelSig = this.panelSig();
     const g = this.game; const d = TOWERS[t.type]; const s = t.stats; const p = this.els.panel; const off = t.offline > 0;
     p.className = 'panel' + (off ? ' offline' : '');
     const up = t.level < 2 ? g.towerCost(t.type, t.level + 1) : null;
@@ -139,6 +153,7 @@ export class UI {
     const pu = p.querySelector('#p-purge'); if (pu) pu.onclick = () => g.purge(t);
   }
   openApPanel(ap) {
+    this.panelTarget = { kind: 'ap', ap }; this.lastPanelSig = this.panelSig();
     const g = this.game; const p = this.els.panel; p.className = 'panel ap';
     const eff = { TRAP: `Detonates for ${ap.dmg} damage to everything within ${ap.radius} cells.`, DOOR: `Seals the road for ${ap.duration}s. Ground enemies stop; drones fly over.`, TURRET: `Hijack this turret for ${ap.duration}s. ${ap.dmg} dmg × ${ap.rate}/s, range ${ap.range}.`, REROUTE: `Switch the enemy route. Current: ROUTE ${g.activeRoute === 0 ? 'A' : 'B'}. New spawns take the other road.` }[ap.type];
     const cd = ap.cooldown > 0 ? `REBOOT ${Math.ceil(ap.cooldown)}s` : null;
