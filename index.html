@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Night City Breach</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="A cyberpunk tower defense with breach protocol hacking. Defend Night City.">
+  <meta name="theme-color" content="#06060d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NC Breach">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Battlefield -->
+    <div id="field">
+      <canvas id="game"></canvas>
+      <div id="toasts"></div>
+    </div>
+
+    <!-- Top HUD -->
+    <header id="hud-top" class="hud hidden">
+      <div class="stat" id="stat-eddies"><span class="lbl">€$</span><span class="val" data-v="eddies">0</span></div>
+      <div class="stat" id="stat-lives"><span class="lbl">CORE</span><span class="val" data-v="lives">20</span></div>
+      <div class="stat" id="stat-wave"><span class="lbl">WAVE</span><span class="val" data-v="wave">0/10</span></div>
+      <div class="stat ram" id="stat-ram">
+        <span class="lbl">RAM</span>
+        <div class="rambar"><div class="ramfill" data-v="ramfill"></div><span class="ramtxt" data-v="ram">0/12</span></div>
+      </div>
+      <div class="hudbtns">
+        <button class="ibtn" id="btn-speed" title="Speed">1×</button>
+        <button class="ibtn" id="btn-pause" title="Pause">II</button>
+      </div>
+    </header>
+
+    <!-- Bottom HUD -->
+    <footer id="hud-bottom" class="hud hidden">
+      <div class="tabs">
+        <button class="tab active" data-tab="build">BUILD</button>
+        <button class="tab" data-tab="hacks">QUICKHACKS</button>
+        <button class="tab breach" id="btn-breach" disabled>BREACH</button>
+      </div>
+      <div class="tray" id="tray-build"></div>
+      <div class="tray hidden" id="tray-hacks"></div>
+      <div class="wavebar">
+        <div id="wave-info" class="waveinfo">Prepare your defenses.</div>
+        <button class="btn primary" id="btn-wave">START WAVE</button>
+      </div>
+    </footer>
+
+    <!-- Contextual panels -->
+    <div id="panel" class="panel hidden"></div>
+
+    <!-- Full screens -->
+    <section id="screen-menu" class="screen">
+      <div class="menu-inner">
+        <div class="logo">
+          <div class="logo-top">NIGHT CITY</div>
+          <div class="logo-main glitch" data-text="BREACH">BREACH</div>
+          <div class="logo-sub">// TOWER DEFENSE PROTOCOL v1.0</div>
+        </div>
+        <div class="menu-btns">
+          <button class="btn primary big" id="btn-play">JACK IN</button>
+          <button class="btn" id="btn-howto">HOW TO PLAY</button>
+          <div class="row">
+            <button class="btn small" id="btn-sfx">SFX: ON</button>
+            <button class="btn small" id="btn-music">MUSIC: ON</button>
+          </div>
+          <button class="btn small danger" id="btn-reset">WIPE SAVE</button>
+        </div>
+        <div class="menu-foot">Add to Home Screen for full-screen play.</div>
+      </div>
+    </section>
+
+    <section id="screen-districts" class="screen hidden">
+      <div class="scr-head">
+        <button class="btn small" id="btn-back-menu">◀ MENU</button>
+        <h2>SELECT DISTRICT</h2>
+        <div class="cred" id="cred">★ 0</div>
+      </div>
+      <div class="district-list" id="district-list"></div>
+    </section>
+
+    <section id="screen-howto" class="screen hidden">
+      <div class="scr-head"><button class="btn small" id="btn-back-howto">◀ BACK</button><h2>HOW TO PLAY</h2><span></span></div>
+      <div class="howto">
+        <h3>BUILD</h3>
+        <p>Tap a tower in the BUILD tray, then tap an empty cell to place it. Tap a placed tower to upgrade, sell, or purge it. Enemies that reach the end damage your CORE.</p>
+        <h3>QUICKHACKS</h3>
+        <p>Quickhacks cost RAM. Select one, then tap an enemy. RAM regenerates over time. ICE Decks regenerate it faster.</p>
+        <h3>NETRUNNERS</h3>
+        <p>Enemy netrunners hack your towers and take them OFFLINE. An ICE Deck's firewall protects towers in its range. Tap an offline tower and PURGE it to bring it back fast.</p>
+        <h3>BREACH PROTOCOL</h3>
+        <p>Between waves, breach the local net. Pick codes from the matrix, alternating rows and columns, to upload daemons: cheaper towers, extra eddies, vulnerable enemies, and more. One breach per wave.</p>
+        <h3>ACCESS POINTS</h3>
+        <p>Glowing nodes on the map can be jacked into for RAM: hijack turrets, trigger traps, slam blast doors, or reroute the enemy path.</p>
+      </div>
+    </section>
+
+    <section id="screen-breach" class="screen overlay hidden"></section>
+    <section id="screen-result" class="screen overlay hidden"></section>
+    <section id="screen-pause" class="screen overlay hidden">
+      <div class="menu-inner">
+        <h2>PAUSED</h2>
+        <div class="menu-btns">
+          <button class="btn primary" id="btn-resume">RESUME</button>
+          <button class="btn" id="btn-restart">RESTART DISTRICT</button>
+          <button class="btn" id="btn-quit">QUIT TO DISTRICTS</button>
+        </div>
+      </div>
+    </section>
+  </div>
+  <div id="scanlines"></div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
