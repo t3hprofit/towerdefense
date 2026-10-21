@@ -33,7 +33,7 @@ export const DISTRICTS = [
     blocked: [[0,0],[8,0],[0,13],[8,13],[8,12],[2,4],[8,4],[0,9]],
     accessPoints: [
       { id: 'reroute', type: 'REROUTE', c: 8, r: 1, name: 'TRAFFIC CONTROL', duration: 25, cost: 5, cooldown: 40 },
-      { id: 'turret1', type: 'TURRET', c: 4, r: 5, name: 'ARASAKA TURRET', duration: 20, dmg: 22, rate: 4, range: 2.8, cost: 5, cooldown: 40 },
+      { id: 'turret1', type: 'TURRET', c: 6, r: 4, name: 'ARASAKA TURRET', duration: 20, dmg: 22, rate: 4, range: 2.8, cost: 5, cooldown: 40 },
     ],
     roster: [
       { type: 'tyger', from: 1, weight: 5 }, { type: 'drone', from: 2, weight: 2 },
