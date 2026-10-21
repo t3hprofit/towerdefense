@@ -27,6 +27,9 @@ export function generateWave(district, wave) {
   if (isBoss) {
     groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: diff * 0.75, boss: true });
   }
+  // ICE shields: from wave 4 a rising share of non-boss enemies spawn shielded; bosses always are.
+  const iceChance = wave >= 4 ? Math.min(0.4, 0.08 + 0.05 * (wave - 4)) : 0;
+  for (const g of groups) { g.ice = []; for (let i = 0; i < g.count; i++) g.ice.push(g.boss || (!ENEMIES[g.type].hacker && rng.next() < iceChance)); }
   return { wave, groups, boss: isBoss, bonus: 40 + 12 * wave };
 }
 
@@ -34,7 +37,7 @@ export function generateWave(district, wave) {
 export function scheduleWave(w) {
   const list = []; let t = 0.6;
   for (const g of w.groups) {
-    for (let i = 0; i < g.count; i++) { list.push({ type: g.type, t, hpMult: g.hpMult }); t += g.interval; }
+    for (let i = 0; i < g.count; i++) { list.push({ type: g.type, t, hpMult: g.hpMult, ice: !!(g.ice && g.ice[i]) }); t += g.interval; }
     t += 1.2;
   }
   return list;

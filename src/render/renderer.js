@@ -189,6 +189,8 @@ export class Renderer {
       if (e.shape === 'ring') { ctx.beginPath(); ctx.arc(0, 0, rad * 0.4, 0, Math.PI * 2); ctx.stroke(); }
       if (e.shape === 'run') { ctx.rotate(-e.ang); ctx.strokeStyle = '#b14cff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -rad * 0.85); ctx.lineTo(0, -rad * 1.5); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -rad * 1.5, 2.5 + Math.sin(g.time * 10) * 1, 0, Math.PI * 2); ctx.fillStyle = '#b14cff'; ctx.fill(); ctx.rotate(e.ang); }
       ctx.restore();
+      // ICE shield: pulsing cyan hex ring
+      if (e.ice) { ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.55 + 0.35 * Math.sin(g.time * 6 + e.id); this.hex(x, y, rad + 6); ctx.stroke(); ctx.globalAlpha = 1; if (!e.boss) { ctx.fillStyle = '#00f0ff'; ctx.font = `bold ${cs * 0.16}px ${FONT.ui}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText('ICE', x, y + rad + 7); } }
       // Status glyphs
       if (e.burn > 0) { ctx.fillStyle = Math.floor(g.time * 12) % 2 ? '#ff8c1a' : '#fcee0a'; ctx.beginPath(); ctx.arc(x + rad * 0.6, y - rad * 0.6, 3, 0, Math.PI * 2); ctx.fill(); }
       if (e.contagion > 0) { ctx.fillStyle = '#39ff14'; ctx.beginPath(); ctx.arc(x - rad * 0.6, y - rad * 0.6, 3, 0, Math.PI * 2); ctx.fill(); }

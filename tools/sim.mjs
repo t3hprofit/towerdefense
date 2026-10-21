@@ -43,7 +43,9 @@ function bot(g) {
   if (mode === 'hacker') {
     for (const t of g.towers) if (t.offline > 0 && g.ram >= 2) g.purge(t);
     const boss = g.enemies.find(e => e.boss); const first = g.enemies.reduce((a, b) => (!a || b.dist > a.dist) ? b : a, null);
-    if (g.ram >= 10 && boss) g.castHack(QUICKHACKS.short, boss);
+    const iced = g.enemies.filter(e => e.ice).sort((a, b) => b.dist - a.dist)[0];
+    if (iced && g.ram >= 3) g.castHack(QUICKHACKS.overheat, iced);
+    else if (g.ram >= 10 && boss) g.castHack(QUICKHACKS.short, boss);
     else if (g.ram >= g.ramMax - 0.5 && first) g.castHack(QUICKHACKS.short, first);
     for (const ap of g.accessPoints) if (ap.cooldown <= 0 && g.ram >= ap.cost + 4) {
       const x = ap.c + 0.5, y = ap.r + 0.5;

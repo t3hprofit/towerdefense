@@ -18,7 +18,9 @@ const TUNE = () => globalThis.__NCB_TUNE || {};
 const ECON = () => TUNE().econ ?? 0.6, REWARD_DECAY = () => TUNE().rewardDecay ?? 0.1, BREACH_EVERY = 3;
 // Scoring
 const COMBO_WINDOW = 1.5, COMBO_CAP = 25, MULT_CAP = 3.5, BOSS_KILL_BONUS = 5000;
-const SCORE_KILL = 10, SCORE_WAVE = 500, SCORE_CLEAN_WAVE = 250, SCORE_DAEMON = 300, SCORE_AP = 100, SCORE_PURGE = 50, SCORE_LIFE = 200;
+const SCORE_KILL = 10, SCORE_WAVE = 500, SCORE_CLEAN_WAVE = 250, SCORE_DAEMON = 300, SCORE_AP = 100, SCORE_PURGE = 50, SCORE_LIFE = 200, SCORE_ICE = 150;
+// ICE shields: tower damage multiplier while shielded, Arc Node multiplier, boss shield regen delay.
+const ICE_TOWER_MUL = 0.2, ICE_TESLA_MUL = 0.5, ICE_REGEN = 12;
 
 export class Game {
   constructor(ui) {
@@ -157,6 +159,7 @@ export class Game {
   castHack(qh, e) {
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
     this.ram -= qh.cost; this.stats.hacks++;
+    if (e.ice) { e.ice = false; e.iceRegen = ICE_REGEN; Session.add(SCORE_ICE); this.text(e.x, e.y - 0.7, 'ICE BROKEN', '#00f0ff', 1.2); this.ring(e.x, e.y, 0.9, '#00f0ff'); Audio.play('purge'); }
     const organic = e.tags.includes('organic'), mech = e.tags.includes('mech') || e.tags.includes('drone');
     switch (qh.id) {
       case 'short': this.damage(e, mech ? 180 : 90, { pierce: true, kind: 'hack' }); this.zap(e.x, e.y - 2.5, e.x, e.y, '#00f0ff'); break;
@@ -265,7 +268,7 @@ export class Game {
   finish(won) {
     if (this.state === 'result') return;
     this.state = 'result';
-    const stars = won ? (this.lives >= 15 ? 3 : this.lives >= 8 ? 2 : 1) : 0;
+    const stars = won ? (this.lives >= 18 ? 3 : this.lives >= 10 ? 2 : 1) : 0;
     const idx = DISTRICTS.indexOf(this.district); const next = DISTRICTS[idx + 1];
     if (won) Session.add(this.lives * SCORE_LIFE);
     Session.endRun({ won });
@@ -315,7 +318,9 @@ export class Game {
     const hp = Math.round(def.hp * s.hpMult);
     this.enemies.push({ id: ++this.rngId, type: s.type, name: def.name, hp, maxHp: hp, speed: def.speed, armor: def.armor, reward: def.reward, size: def.size, shape: def.shape, color: def.color,
       tags: def.tags, boss: !!def.boss, hacker: def.hacker || null, regen: def.regen || 0, route, routeIdx: ri, dist: 0, x: p.x, y: p.y, ang: p.ang,
-      burn: 0, burnDps: 0, blind: 0, stun: 0, contagion: 0, contagionDps: 0, spreadTick: 0, slowMul: 1, hacks: [], hitFlash: 0, dead: false, t: 0 });
+      burn: 0, burnDps: 0, blind: 0, stun: 0, contagion: 0, contagionDps: 0, spreadTick: 0, slowMul: 1, hacks: [], hitFlash: 0, dead: false, t: 0,
+      ice: !!s.ice, iceRegen: 0 });
+    if (s.ice && !def.boss) this.hint('ice', 'ICE-shielded hostile! Towers barely scratch it until a quickhack breaks the shield.');
     if (def.boss) { this.ui.toast(`${def.name} · ${def.title}`, 'warn', 3000); this.shake = 0.6; }
   }
   updateEnemies(dt) {
@@ -332,6 +337,7 @@ export class Game {
       }
       if (e.blind > 0) e.blind -= dt;
       if (e.regen) e.hp = Math.min(e.maxHp, e.hp + e.regen * dt);
+      if (e.boss && !e.ice) { e.iceRegen -= dt; if (e.iceRegen <= 0) { e.ice = true; this.text(e.x, e.y - 0.5, 'ICE RESTORED', '#00f0ff'); } }
       let slow = 1;
       for (const d of decks) if (Math.hypot(d.x - e.x, d.y - e.y) <= d.stats.range) slow = Math.min(slow, 1 - d.stats.slow);
       if (e.blind > 0) slow *= 0.3;
@@ -387,6 +393,7 @@ export class Game {
     if (e.dead) return 0;
     let a = amount;
     if (!pierce) a = Math.max(amount * 0.25, amount - e.armor);
+    if (e.ice && kind !== 'hack' && kind !== 'trap') a *= kind === 'tesla' ? ICE_TESLA_MUL : ICE_TOWER_MUL;
     if (this.fx.massvuln > 0) a *= 1.35;
     e.hp -= a; if (kind !== 'dot') e.hitFlash = 0.08;
     if (e.hp <= 0) this.kill(e, src);
@@ -448,7 +455,7 @@ export class Game {
           if (!cur) break; hit.add(cur);
           this.zap(prev.x, prev.y, cur.x, cur.y, '#b14cff');
           const mech = cur.tags.includes('mech') || cur.tags.includes('drone');
-          this.damage(cur, s.dmg * Math.pow(0.85, i) * (mech ? 1.6 : 1), { pierce: true, src: t });
+          this.damage(cur, s.dmg * Math.pow(0.85, i) * (mech ? 1.6 : 1), { pierce: true, src: t, kind: 'tesla' });
           prev = cur;
           let nx = null, nd = 1.7; for (const e of this.enemies) if (!hit.has(e) && !e.dead) { const d = Math.hypot(e.x - cur.x, e.y - cur.y); if (d < nd) { nd = d; nx = e; } }
           cur = nx;
