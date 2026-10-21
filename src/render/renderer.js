@@ -178,7 +178,7 @@ export class Renderer {
   drawHackLinks() {
     const ctx = this.ctx, g = this.game;
     ctx.setLineDash([3, 4]); ctx.lineDashOffset = -g.time * 20; ctx.lineWidth = 1.5; ctx.strokeStyle = '#b14cff';
-    for (const e of g.enemies) for (const hk of e.hacks) { ctx.beginPath(); ctx.moveTo(this.sx(e.x), this.sy(e.y)); ctx.lineTo(this.sx(hk.tower.x), this.sy(hk.tower.y)); ctx.stroke(); }
+    for (const e of g.enemies) for (const hk of e.hacks) { ctx.strokeStyle = e.hacker?.pierce ? '#ff3b3b' : '#b14cff'; ctx.lineWidth = e.hacker?.pierce ? 2.5 : 1.5; ctx.beginPath(); ctx.moveTo(this.sx(e.x), this.sy(e.y)); ctx.lineTo(this.sx(hk.tower.x), this.sy(hk.tower.y)); ctx.stroke(); }
     ctx.setLineDash([]); ctx.lineDashOffset = 0;
   }
   drawEnemies() {
@@ -201,8 +201,9 @@ export class Renderer {
       }
       ctx.fill(); ctx.stroke();
       if (e.shape === 'ring') { ctx.beginPath(); ctx.arc(0, 0, rad * 0.4, 0, Math.PI * 2); ctx.stroke(); }
-      if (e.shape === 'run') { ctx.rotate(-e.ang); ctx.strokeStyle = '#b14cff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -rad * 0.85); ctx.lineTo(0, -rad * 1.5); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -rad * 1.5, 2.5 + Math.sin(g.time * 10) * 1, 0, Math.PI * 2); ctx.fillStyle = '#b14cff'; ctx.fill(); ctx.rotate(e.ang); }
+      if (e.shape === 'run') { ctx.rotate(-e.ang); const elite = e.tags.includes('elite'); if (elite) { ctx.strokeStyle = '#ff3b3b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, rad * 1.25, 0, Math.PI * 2); ctx.stroke(); } ctx.strokeStyle = elite ? '#ff3b3b' : '#b14cff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, -rad * 0.85); ctx.lineTo(0, -rad * 1.5); ctx.stroke(); ctx.beginPath(); ctx.arc(0, -rad * 1.5, 2.5 + Math.sin(g.time * 10) * 1, 0, Math.PI * 2); ctx.fillStyle = '#b14cff'; ctx.fill(); ctx.rotate(e.ang); }
       ctx.restore();
+      if (e.tags.includes('elite')) { ctx.fillStyle = '#ff3b3b'; ctx.font = `bold ${cs * 0.16}px ${FONT.ui}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText('HUSK', x, y + rad + (e.ice ? 16 : 7)); }
       // ICE shield: pulsing cyan hex ring
       if (e.ice) { ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.55 + 0.35 * Math.sin(g.time * 6 + e.id); this.hex(x, y, rad + 6); ctx.stroke(); ctx.globalAlpha = 1; if (!e.boss) { ctx.fillStyle = '#00f0ff'; ctx.font = `bold ${cs * 0.16}px ${FONT.ui}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText('ICE', x, y + rad + 7); } }
       // Status glyphs

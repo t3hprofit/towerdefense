@@ -18,6 +18,9 @@ export const ENEMIES = {
   trooper:   { name: 'Arasaka Trooper', hp: 260,  speed: 1.15, armor: 6, reward: 26, size: 0.3,  shape: 'sq',   color: '#ff2a6d', tags: ['organic'], pts: 3.5 },
   akrunner:  { name: 'Arasaka Runner',  hp: 260,  speed: 1.05, armor: 4, reward: 44, size: 0.3,  shape: 'run',  color: '#ff2a6d', tags: ['organic','runner'], pts: 6,
                hacker: { range: 3.2, time: 2.0, disable: 14 } },
+  // Elite: a netrunner ridden by something from past the Blackwall. Its hacks pierce ICE Deck firewalls.
+  husk:      { name: 'Blackwall Husk',  hp: 320,  speed: 0.8,  armor: 4, reward: 60, size: 0.31, shape: 'run',  color: '#f4f4ff', tags: ['organic','runner','elite'], pts: 8,
+               hacker: { range: 3.4, time: 2.4, disable: 12, pierce: true } },
   // Bosses
   royce:    { name: 'ROYCE',            hp: 2600,  speed: 0.6,  armor: 10, reward: 300, size: 0.5, shape: 'sq',   color: '#ff2a6d', tags: ['organic','boss'], boss: true, title: 'Maelstrom Warlord' },
   oni:      { name: 'ONI',              hp: 2400,  speed: 1.3,  armor: 8,  reward: 320, size: 0.46, shape: 'dia', color: '#fcee0a', tags: ['organic','boss'], boss: true, title: 'Tyger Claw Blademaster' },

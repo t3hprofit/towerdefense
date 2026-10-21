@@ -50,6 +50,10 @@ seconds of continuous contact takes it OFFLINE for `disable` seconds. Ranges are
 outside SMG range and inside sniper range (2.8–3.6). Placide holds two hacks at once. Purge
 (2 RAM) restores a tower instantly; Cyberware Malfunction drops a runner's hacks.
 
+**Blackwall Husk** (elite, white with a red ring and HUSK label): its hacks **pierce ICE Deck
+firewalls**, drawn as a red link. Appears sparingly: Pacifica from wave 7, City Center from wave 5,
+capped at one per wave (two from wave 9). The counter is killing it before 2.4s elapse, or purging.
+
 ### ICE shields
 From wave 4 a share of non-runner enemies spawn shielded; every boss is shielded and its shield
 regenerates (10s baseline). A shielded enemy takes 20% tower damage (Arc Node 50%, bosses 10%)

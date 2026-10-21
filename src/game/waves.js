@@ -24,6 +24,7 @@ export function generateWave(district, wave, tierId = 'netrunner') {
     let count = Math.min(maxCount, rng.int(2, 6));
     if (def.pts >= 6) count = Math.min(count, 2);
     if (def.hacker) count = Math.min(count, 2 + Math.floor(wave / 4));
+    if (def.tags.includes('elite')) count = Math.min(count, 1 + Math.floor(wave / 9));
     groups.push({ type: pick.type, count, interval: def.speed > 1.5 ? 0.45 : def.pts >= 6 ? 1.3 : 0.75, hpMult });
     left -= count * def.pts;
   }

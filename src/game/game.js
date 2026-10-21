@@ -347,6 +347,7 @@ export class Game {
       ice: !!s.ice, iceRegen: 0 });
     if (s.ice && !this.hintsShown.has('ice')) { this.hint('ice', 'ICE SHIELD: towers do almost nothing to it. Pick a QUICKHACK below and tap the shielded enemy.'); }
     if (def.boss) { this.ui.toast(`${def.name} · ${def.title}`, 'warn', 3000); this.shake = 0.6; }
+    if (def.tags.includes('elite')) this.hint('elite', 'BLACKWALL HUSK: its hacks go straight through firewalls. Kill it fast or be ready to PURGE.');
   }
   updateEnemies(dt) {
     const decks = this.towers.filter(t => t.type === 'deck' && t.offline <= 0);
@@ -387,7 +388,7 @@ export class Game {
     // Progress existing hacks
     for (const hk of e.hacks) {
       const t = hk.tower;
-      if (!this.towers.includes(t) || t.offline > 0 || Math.hypot(t.x - e.x, t.y - e.y) > h.range + 0.2 || this.isFirewalled(t)) { hk.dead = true; t.hackers = Math.max(0, t.hackers - 1); t.hackProgress = 0; continue; }
+      if (!this.towers.includes(t) || t.offline > 0 || Math.hypot(t.x - e.x, t.y - e.y) > h.range + 0.2 || (!h.pierce && this.isFirewalled(t))) { hk.dead = true; t.hackers = Math.max(0, t.hackers - 1); t.hackProgress = 0; continue; }
       hk.p += dt / h.time; t.hackProgress = Math.max(t.hackProgress || 0, hk.p);
       if (hk.p >= 1) {
         t.offline = h.disable; t.hackProgress = 0; t.hackers = Math.max(0, t.hackers - 1); hk.dead = true;
@@ -402,7 +403,7 @@ export class Game {
     for (const t of this.towers) {
       if (t.offline > 0 || e.hacks.some(hk => hk.tower === t)) continue;
       const d = Math.hypot(t.x - e.x, t.y - e.y); if (d > bd) continue;
-      if (this.isFirewalled(t)) continue;
+      if (!h.pierce && this.isFirewalled(t)) continue;
       bd = d; best = t;
     }
     if (best) { e.hacks.push({ tower: best, p: 0 }); best.hackers = (best.hackers || 0) + 1; }

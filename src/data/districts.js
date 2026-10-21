@@ -96,7 +96,7 @@ export const DISTRICTS = [
     ],
     roster: [
       { type: 'animal', from: 1, weight: 3 }, { type: 'netrunner', from: 2, weight: 2 }, { type: 'vdbrunner', from: 4, weight: 2 },
-      { type: 'drone', from: 2, weight: 2 }, { type: 'scav', from: 1, weight: 3 },
+      { type: 'drone', from: 2, weight: 2 }, { type: 'scav', from: 1, weight: 3 }, { type: 'husk', from: 7, weight: 0.5 },
     ],
     boss: 'placide',
   },
@@ -116,7 +116,7 @@ export const DISTRICTS = [
     ],
     roster: [
       { type: 'trooper', from: 1, weight: 4 }, { type: 'akrunner', from: 2, weight: 2 }, { type: 'mech', from: 3, weight: 1.6 },
-      { type: 'drone', from: 1, weight: 2 }, { type: 'ronin', from: 4, weight: 1.5 },
+      { type: 'drone', from: 1, weight: 2 }, { type: 'ronin', from: 4, weight: 1.5 }, { type: 'husk', from: 5, weight: 0.7 },
     ],
     boss: 'smasher',
   },
