@@ -1,74 +1,92 @@
 # Night City Breach
 
-A cyberpunk tower defense game for iPhone, built as an installable web app (PWA). No app store, no build step: open it in Safari, add it to your home screen, and play full-screen offline.
+A cyberpunk tower defense for iPhone with a hacking layer: quickhacks, enemy netrunners, ICE
+shields, Breach Protocol, and map access points. Built as an installable web app (PWA): no app
+store, no build step, no dependencies. Open it in Safari, add it to the home screen, play offline.
+
+Live: **https://t3hprofit.github.io/towerdefense/** (deployed from this branch by
+`.github/workflows/static.yml` on every push).
+
+Docs:
+- `docs/DESIGN.md` — every mechanic and its numbers.
+- `docs/BALANCE.md` — how it is tuned, the playtest log, and which knob fixes which complaint.
+- `CLAUDE.md` — orientation for an AI session picking the project up.
 
 ## Play it on your iPhone
 
-1. Host the folder anywhere static (GitHub Pages is wired up, see below).
-2. Open the URL in **Safari** on your iPhone.
-3. Tap the **Share** button, then **Add to Home Screen**.
-4. Launch it from the home screen icon. It runs full-screen in portrait and works offline after the first load.
+1. Open the live URL in **Safari**.
+2. Share → **Add to Home Screen**.
+3. Launch from the icon. Full-screen portrait, works offline after the first load.
 
-### GitHub Pages
+Updates: every deploy gets a new cache version, so the installed app picks up changes on its
+next launch (it checks when foregrounded and reloads itself from the main menu).
 
-A workflow in `.github/workflows/pages.yml` deploys the repo root on every push to `main`.
-Enable it once in the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-The game will be live at `https://<your-user>.github.io/towerdefense/`.
+## The game in one screen
 
-### Local
+- **Build** towers in the BUILD tray, tap a cell. Tap a tower to upgrade, sell, or purge.
+- **Quickhacks** cost RAM: Short Circuit, Overheat, Reboot Optics, Cyberware Malfunction,
+  Contagion, Purge. Select one, tap an enemy. RAM regenerates; ICE Decks regenerate it faster.
+- **ICE shields**: from wave 4 some enemies (and every boss) are shielded. Towers do 20% damage
+  until any quickhack breaks the shield. The QUICKHACKS tab pulses when one is on the field.
+- **Enemy netrunners** hack your towers offline unless the tower sits inside an ICE Deck firewall.
+  PURGE (2 RAM) brings a tower back.
+- **Breach Protocol** between waves (charges: 1 to start, +1 after waves 3, 6, 9): the code
+  matrix. Alternate row/column picks to upload daemons. The wave clock keeps running (+10s).
+- **Access points**: jack in for RAM to detonate traps, seal blast doors, hijack map turrets, or
+  reroute the enemy road for 25 seconds.
+- **Wave clock**: waves auto-start; call early for bonus score.
+- **Tiers**: Street Kid, Netrunner (the intended challenge), Legend, Blackwall. Picked on the
+  district screen. Higher tiers multiply score; a loss banks half.
+
+Six districts, ten waves each: Watson, Westbrook, Heywood, Santo Domingo, Pacifica, City Center.
+Each has its own look, roster, access points and boss.
+
+## Run locally
 
 ```
-npx http-server -p 8080 .
+npx http-server -p 8080 -s .
 ```
 
-Then open `http://localhost:8080`. Keyboard shortcuts on desktop: `1-6` select towers, `Space` starts a wave, `B` opens Breach Protocol, `Q` toggles the quickhack tray, `P` pauses.
-
-## The game
-
-Defend the CORE across six Night City districts, ten waves each, boss on wave ten. Winning a district unlocks the next one and new towers.
-
-| # | District | Threat | Boss |
-|---|----------|--------|------|
-| 1 | Watson | Scavs, Maelstrom, drones | Royce |
-| 2 | Westbrook | Tyger Claws, cyber-ronin, reroutable path | Oni |
-| 3 | Heywood | Valentinos, 6th Street heavies, trucks | War Wagon |
-| 4 | Santo Domingo | Militech mechs, two spawn points | Minotaur |
-| 5 | Pacifica | Voodoo Boys netrunners everywhere | Placide |
-| 6 | City Center | Arasaka troopers, runners, mechs | Smasher |
-
-### Towers
-
-Saratoga SMG, Nekomata sniper, Arc Node chain lightning, Thermal Vent flamer, ICE Deck firewall, Arasaka rocket pod. Three upgrade tiers each.
-
-### Hacking
-
-- **Quickhacks** cost RAM, which regenerates (faster near ICE Decks): Short Circuit, Overheat, Reboot Optics, Cyberware Malfunction, Contagion, and Purge.
-- **Enemy netrunners** hack your towers offline. Towers inside an ICE Deck firewall are immune. Purge brings a hacked tower back instantly.
-- **Breach Protocol** runs between waves: pick codes from the matrix, alternating rows and columns, to upload daemons (cheaper towers, extra eddies, enemy vulnerability, Blackwall ICE, overclock, and more). One breach per wave, timer starts on your first pick.
-- **Access points** on the map can be jacked into for RAM: detonate traps, seal blast doors, hijack turrets, or reroute the enemy path.
+Open `http://localhost:8080`. Desktop keys: `1-6` select towers, `Space` starts a wave,
+`B` opens Breach, `Q` toggles the quickhack tray, `P` pauses.
 
 ## Code layout
 
 ```
 index.html            shell + DOM for HUD, trays, panels, screens
-css/style.css         neon UI
-src/config/tokens.js  design tokens (palette, fonts, grid, timing)
-src/data/             towers, enemies, quickhacks, daemons, districts
-src/core/             seeded rng, save (localStorage), synthesized audio
-src/game/             path geometry, wave generator, breach puzzle, Game simulation
-src/render/           canvas renderer
+css/style.css         neon UI, safe-area handling, tier picker
+src/config/tokens.js  design tokens
+src/data/             towers, enemies, quickhacks, daemons, districts (maps), tiers
+src/core/             rng, save (localStorage), session (sessionStorage score), synthesized audio
+src/game/             path geometry, wave generator + ICE assignment, breach puzzle, Game simulation
+src/render/           canvas renderer, per-district themes (ground layer + ambient particles)
 src/ui/               DOM UI controller
-src/main.js           loop, input, PWA registration
-sw.js                 offline cache
+src/main.js           loop, input, PWA registration, window.__ncb debug handle
+sw.js                 offline precache (cache name stamped by the deploy workflow)
 manifest.webmanifest  PWA manifest
+tools/                validator, balance sim, traces, Playwright tests and captures
+docs/                 design + balance references
 ```
 
-Everything is plain ES modules. No dependencies, no bundler.
+Everything is plain ES modules. Adding a source file means adding it to `ASSETS` in `sw.js`.
 
-## Testing
+## Testing and tuning tools
 
-Three scripts live in `tools/`. Run them from the repo root.
+Run from the repo root. Node-only tools need nothing installed. Browser tools need a running
+server (`npx http-server -p 8080 -s .`) and Playwright with Chromium; on the cloud runner that is
+`NODE_PATH=/opt/node-tools/node_modules`, elsewhere `npm i -g playwright && npx playwright install chromium`
+and `NODE_PATH="$(npm root -g)"`.
 
-- **Map and wave validation:** `node tools/validate.mjs` checks every district's routes, blocked cells, access points and rosters, then prints the wave compositions. It ends with `VALIDATION OK` or `VALIDATION FAILED`.
-- **Balance simulator:** `node tools/sim.mjs hacker` plays every district with a simple bot and prints the outcome, stars and lives after each wave. Use `basic` instead for a bot that builds and upgrades towers only, without quickhacks or access points. The optional second argument is a district id to run just that district, e.g. `node tools/sim.mjs basic watson`.
-- **Browser smoke test:** start a server with `npx http-server -p 8080 -s .`, then in another shell run `NODE_PATH=/opt/node-tools/node_modules node tools/smoke.mjs`. It plays through the menu, a wave, a quickhack, a breach and an access point, and ends with `ERRORS: none` when the page throws nothing. Screenshots are written to `tools/shots/`. Set `BASE_URL` to test a server other than `http://localhost:8080`, and `SHOT_DIR` to save screenshots somewhere else. Playwright and Chromium must be installed (see the header of `tools/smoke.mjs`).
+| Command | What it tells you |
+|---|---|
+| `node tools/validate.mjs` | Routes, blocked cells, access points and rosters are consistent; prints every wave. Ends `VALIDATION OK`. |
+| `node tools/sim.mjs hacker [district]` | The balance yardstick. Bot plays each district; prints result, stars, lives per wave. `basic` = no hacking. Env: `TIER=street\|netrunner\|legend\|blackwall`, `TUNE='{json}'`, `START='{json}'`. |
+| `node tools/trace.mjs <district> [tier]` | Per-wave trace: lives, towers, towers hacked offline, shielded count, RAM, purges, composition. |
+| `node tools/hackcount.mjs [tier]` | How many towers enemy runners knock offline per district against a bot that never purges. |
+| `NODE_PATH=… node tools/smoke.mjs` | Browser end-to-end: menu → build → wave → quickhack → breach → access point → 5 waves. Must end `ERRORS: none`. Screenshots in `tools/shots/`. |
+| `NODE_PATH=… node tools/score-test.mjs` | Scoring and session-state checks (HUD, sessionStorage, reload, best score, fallback). All lines `PASS`. |
+| `NODE_PATH=… node tools/capture-themes.mjs` | One mid-wave screenshot per district in `tools/shots/themes/`. |
+| `NODE_PATH=… node tools/capture-screens.mjs` | District list, Pacifica wave, tower panel, result and pause screens in `tools/shots/screens/`. |
+| `python3 tools/make-icons.py icons` | Regenerates the PWA icons (needs Pillow). |
+
+`BASE_URL` and `SHOT_DIR` override the server and screenshot directory for the browser tools.
