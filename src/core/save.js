@@ -1,5 +1,5 @@
 const KEY = 'ncb_save_v1';
-const DEFAULT = { districts: {}, settings: { sfx: true, music: true }, unlocked: ['watson'] };
+const DEFAULT = { districts: {}, settings: { sfx: true, music: true, tier: 'street' }, unlocked: ['watson'] };
 
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 

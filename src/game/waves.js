@@ -5,12 +5,15 @@ import { makeRng, hashStr } from '../core/rng.js';
 // Tunables (overridable from the balance sim via globalThis.__NCB_TUNE).
 const T = () => globalThis.__NCB_TUNE || {};
 
-export function generateWave(district, wave) {
+import { tierById } from '../data/tiers.js';
+
+export function generateWave(district, wave, tierId = 'netrunner') {
+  const tier = tierById(tierId);
   const rng = makeRng(hashStr(district.id + ':' + wave));
   const isBoss = wave === district.waves;
   const diff = (T().diffs?.[district.id] ?? district.difficulty) * (T().diffScale ?? 1);
-  const budget = Math.round((9 + (T().budgetRamp ?? 4.5) * (wave - 1)) * (0.75 + 0.25 * diff) * (isBoss ? 0.6 : 1));
-  const hpMult = diff * (1 + (T().hpRamp ?? 0.3) * (wave - 1));
+  const budget = Math.round((9 + (T().budgetRamp ?? 4.5) * (wave - 1)) * (0.75 + 0.25 * diff) * (isBoss ? 0.6 : 1) * tier.count);
+  const hpMult = diff * (1 + (T().hpRamp ?? 0.3) * (wave - 1)) * tier.hp;
   const roster = district.roster.filter(e => e.from <= wave);
   const groups = [];
   let left = budget; let guard = 0;
@@ -25,10 +28,10 @@ export function generateWave(district, wave) {
     left -= count * def.pts;
   }
   if (isBoss) {
-    groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: diff * 0.75, boss: true });
+    groups.splice(Math.floor(groups.length / 2), 0, { type: district.boss, count: 1, interval: 1, hpMult: diff * 0.75 * tier.hp, boss: true });
   }
   // ICE shields: from wave 4 a rising share of non-boss enemies spawn shielded; bosses always are.
-  const iceChance = wave >= 4 ? Math.min(0.4, 0.08 + 0.05 * (wave - 4)) : 0;
+  const iceChance = wave >= 4 ? Math.min(0.6, (0.08 + 0.05 * (wave - 4)) * tier.ice) : 0;
   for (const g of groups) { g.ice = []; for (let i = 0; i < g.count; i++) g.ice.push(g.boss || (!ENEMIES[g.type].hacker && rng.next() < iceChance)); }
   return { wave, groups, boss: isBoss, bonus: 40 + 12 * wave };
 }

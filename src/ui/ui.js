@@ -2,6 +2,7 @@ import { TOWERS, TOWER_ORDER, SELL_RATIO } from '../data/towers.js';
 import { QUICKHACKS, HACK_ORDER } from '../data/quickhacks.js';
 import { DISTRICTS } from '../data/districts.js';
 import { ENEMIES } from '../data/enemies.js';
+import { TIERS, TIER_ORDER } from '../data/tiers.js';
 import { Save } from '../core/save.js';
 import { Audio } from '../core/audio.js';
 import { Session } from '../core/session.js';
@@ -51,6 +52,15 @@ export class UI {
   // ---------- District select ----------
   renderDistricts() {
     const list = $('#district-list'); list.innerHTML = ''; $('#cred').textContent = '★ ' + Save.totalStars();
+    const cur = Save.data.settings.tier || 'street';
+    const tp = $('#tier-picker'); tp.innerHTML = '';
+    for (const id of TIER_ORDER) {
+      const t = TIERS[id]; const b = document.createElement('button'); b.className = 'tier' + (id === cur ? ' sel' : ''); b.style.setProperty('--c', t.color);
+      b.innerHTML = `<span class="tn">${t.name}</span><span class="tm">×${t.score} score</span>`; b.title = t.desc;
+      b.onclick = () => { Save.setSetting('tier', id); Audio.play('blip'); this.renderDistricts(); };
+      tp.appendChild(b);
+    }
+    $('#tier-desc').textContent = TIERS[cur].desc;
     for (const d of DISTRICTS) {
       const unlocked = Save.isUnlocked(d.id); const rec = Save.district(d.id);
       const card = document.createElement('button'); card.className = 'dcard' + (unlocked ? '' : ' locked'); card.style.setProperty('--c', d.color);
@@ -65,7 +75,7 @@ export class UI {
   onDistrictStart() {
     this.hideScreens(); this.els.top.classList.remove('hidden'); this.els.bottom.classList.remove('hidden'); this.closePanel();
     this.els.btnSpeed.textContent = '1×'; this.buildTrays(); this.setTab('build'); this.refreshTrays(); this.lastHud = {};
-    this.toast(`${this.game.district.name} · ${this.game.district.sub}`, 'default', 2600);
+    this.toast(`${this.game.district.name} · ${this.game.district.sub} · ${this.game.tier.name}`, 'default', 2600);
     if (window.__onResize) window.__onResize();
   }
   setTab(t) { this.tab = t; document.querySelectorAll('.tab[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === t)); this.els.trayBuild.classList.toggle('hidden', t !== 'build'); this.els.trayHacks.classList.toggle('hidden', t !== 'hacks'); }
@@ -224,7 +234,7 @@ export class UI {
     const g = this.game; const el = this.screens.result; el.classList.remove('hidden'); this.closePanel();
     const starHtml = [1, 2, 3].map(i => `<span class="${stars >= i ? '' : 'off'}">★</span>`).join('');
     el.innerHTML = `<div class="result ${won ? 'win' : 'lose'}"><h1>${won ? 'DISTRICT SECURED' : 'CORE BREACHED'}</h1>
-      <div style="color:var(--dim);letter-spacing:0.2em">${g.district.name} · ${won ? 'WAVE ' + wave + ' COMPLETE' : 'FELL ON WAVE ' + wave}</div>
+      <div style="color:var(--dim);letter-spacing:0.2em">${g.district.name} · <span style="color:${g.tier.color}">${g.tier.name}</span> · ${won ? 'WAVE ' + wave + ' COMPLETE' : 'FELL ON WAVE ' + wave}</div>
       <div class="bigstars">${starHtml}</div>
       <div class="rstats"><span>SCORE</span><span class="sc">${fmtNum(score)}</span><span>BEST</span><span>${fmtNum(best)}${newBest ? '<em class="nb">NEW BEST</em>' : ''}</span><span>SESSION TOTAL</span><span>${fmtNum(total)}</span><span>BEST COMBO</span><span>${bestCombo}</span><span>KILLS</span><span>${stats.kills}</span><span>CORE LEFT</span><span>${lives}/20</span><span>TOWERS BUILT</span><span>${stats.built}</span><span>QUICKHACKS</span><span>${stats.hacks}</span><span>DAEMONS</span><span>${stats.daemons}</span><span>PURGES</span><span>${stats.purges}</span><span>ACCESS POINTS</span><span>${stats.apHacks}</span><span>LEAKS</span><span>${stats.leaks}</span></div>
       ${won && next ? `<div style="color:var(--green)">UNLOCKED: ${next.name}</div>` : ''}

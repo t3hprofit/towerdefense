@@ -11,6 +11,7 @@ import { makeRng, hashStr } from '../core/rng.js';
 import { Audio } from '../core/audio.js';
 import { Save } from '../core/save.js';
 import { Session } from '../core/session.js';
+import { tierById } from '../data/tiers.js';
 
 const RAM_BASE = 12, RAM_REGEN = 0.45;
 // Economy: fraction of listed enemy reward actually paid out. Breach charges are earned every BREACH_EVERY waves.
@@ -32,7 +33,8 @@ export class Game {
   }
 
   // ---------------- District lifecycle ----------------
-  startDistrict(district) {
+  startDistrict(district, tierId = Save.data.settings.tier || 'street') {
+    this.tier = tierById(tierId);
     this.district = district; this.state = 'play'; this.time = 0; this.paused = false; this.speed = 1;
     this.routes = district.routes.map(w => buildRoute(w, this.cols, this.rows));
     this.activeRoute = 0; this.spawnCounter = 0;
@@ -49,7 +51,7 @@ export class Game {
     this.selected = null; this.selectedTower = null; this.hoverCell = null;
     this.shake = 0; this.flash = 0;
     this.stats = { kills: 0, hacks: 0, breaches: 0, daemons: 0, built: 0, leaks: 0, purges: 0, apHacks: 0 };
-    this.nextWave = generateWave(district, 1);
+    this.nextWave = generateWave(district, 1, this.tier.id);
     this.lastKillT = -Infinity; this.waveLeaked = false; this.waveTimer = PREP_FIRST;
     Session.beginRun(district.id);
     this.hintsShown = new Set();
@@ -152,7 +154,7 @@ export class Game {
   purge(t) {
     const qh = QUICKHACKS.purge;
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
-    this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; this.stats.purges++; Session.add(SCORE_PURGE);
+    this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; this.stats.purges++; this.addScore(SCORE_PURGE);
     for (const e of this.enemies) if (e.hacks) e.hacks = e.hacks.filter(h => h.tower !== t);
     Audio.play('purge'); this.burst(t.x, t.y, '#b14cff', 16, 2.4); this.text(t.x, t.y, 'PURGED', '#b14cff');
     this.ui.closePanel(); this.ui.refreshTrays();
@@ -162,7 +164,7 @@ export class Game {
   castHack(qh, e) {
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
     this.ram -= qh.cost; this.stats.hacks++;
-    if (e.ice) { e.ice = false; e.iceRegen = ICE_REGEN; Session.add(SCORE_ICE); this.text(e.x, e.y - 0.7, 'ICE BROKEN', '#00f0ff', 1.2); this.ring(e.x, e.y, 0.9, '#00f0ff'); Audio.play('purge'); }
+    if (e.ice) { e.ice = false; e.iceRegen = this.tier.bossRegen; this.addScore(SCORE_ICE); this.text(e.x, e.y - 0.7, 'ICE BROKEN', '#00f0ff', 1.2); this.ring(e.x, e.y, 0.9, '#00f0ff'); Audio.play('purge'); }
     const organic = e.tags.includes('organic'), mech = e.tags.includes('mech') || e.tags.includes('drone');
     switch (qh.id) {
       case 'short': this.damage(e, mech ? 180 : 90, { pierce: true, kind: 'hack' }); this.zap(e.x, e.y - 2.5, e.x, e.y, '#00f0ff'); break;
@@ -182,7 +184,7 @@ export class Game {
   jackIn(ap) {
     if (ap.cooldown > 0) { this.ui.toast('Access point rebooting', 'warn'); return; }
     if (this.ram < ap.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
-    this.ram -= ap.cost; this.stats.apHacks++; Session.add(SCORE_AP);
+    this.ram -= ap.cost; this.stats.apHacks++; this.addScore(SCORE_AP);
     const x = ap.c + 0.5, y = ap.r + 0.5;
     switch (ap.type) {
       case 'TRAP': {
@@ -220,7 +222,7 @@ export class Game {
     if (done.length) Audio.play('daemon'); else Audio.play('fail');
   }
   applyDaemon(id) {
-    this.stats.daemons++; Session.add(SCORE_DAEMON); if (DAEMONS[id].once) this.uploadedOnce.add(id);
+    this.stats.daemons++; this.addScore(SCORE_DAEMON); if (DAEMONS[id].once) this.uploadedOnce.add(id);
     switch (id) {
       case 'datamine1': this.eddies += 80; break;
       case 'datamine2': this.eddies += 180; break;
@@ -238,7 +240,7 @@ export class Game {
   // ---------------- Waves ----------------
   startWave() {
     if (this.state !== 'play' || this.paused || this.waveActive || this.wave >= this.district.waves) return;
-    if (this.waveTimer !== null && this.waveTimer > 1) { const early = Math.round(this.waveTimer * SCORE_EARLY); Session.add(early); this.ui.toast(`EARLY CALL +${early} score`, 'good'); }
+    if (this.waveTimer !== null && this.waveTimer > 1) { const early = Math.round(this.waveTimer * SCORE_EARLY); this.addScore(early); this.ui.toast(`EARLY CALL +${early} score`, 'good'); }
     this.beginWave();
   }
   beginWave() {
@@ -253,13 +255,13 @@ export class Game {
   endWave() {
     this.waveActive = false;
     const bonus = this.currentWave.bonus; this.eddies += bonus;
-    Session.add(SCORE_WAVE * this.wave + (this.waveLeaked ? 0 : SCORE_CLEAN_WAVE));
+    this.addScore(SCORE_WAVE * this.wave + (this.waveLeaked ? 0 : SCORE_CLEAN_WAVE));
     this.ui.toast(`WAVE ${this.wave} CLEARED · +€$${bonus}`, 'good');
     if (this.fx.massvuln > 0) this.fx.massvuln--; if (this.fx.blackwall > 0) this.fx.blackwall--;
     if (this.fx.overclock > 0) this.fx.overclock--; if (this.fx.bounty > 0) this.fx.bounty--;
     if (this.wave >= this.district.waves) { this.finish(true); return; }
     if (this.wave % BREACH_EVERY === 0) { this.breachCharges++; this.ui.toast('BREACH CHARGE ACQUIRED', 'pink'); }
-    this.nextWave = generateWave(this.district, this.wave + 1);
+    this.nextWave = generateWave(this.district, this.wave + 1, this.tier.id);
     if (this.breachCharges > 0) this.hint('breach', 'BREACH available: hack the local net for daemons between waves.');
     if (this.nextWave.groups.some(g => ENEMIES[g.type].hacker)) this.hint('runner', 'Netrunners next wave! They hack towers offline. PURGE restores them.');
     this.waveTimer = this.nextWave.boss ? PREP_BOSS : PREP_WAVE;
@@ -281,7 +283,7 @@ export class Game {
     this.state = 'result';
     const stars = won ? (this.lives >= 18 ? 3 : this.lives >= 10 ? 2 : 1) : 0;
     const idx = DISTRICTS.indexOf(this.district); const next = DISTRICTS[idx + 1];
-    if (won) Session.add(this.lives * SCORE_LIFE);
+    if (won) this.addScore(this.lives * SCORE_LIFE);
     Session.endRun({ won });
     const score = Session.state.runScore; const prevBest = Save.district(this.district.id).bestScore || 0;
     Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score });
@@ -298,6 +300,7 @@ export class Game {
     let dt = dtReal * (this.state === 'breach' ? 1 : this.speed);
     while (dt > 0 && this.simActive()) { const step = Math.min(dt, 1 / 60); this.step(step); dt -= step; }
   }
+  addScore(points) { Session.add(points * this.tier.score); }
   simActive() { return this.state === 'play' || this.state === 'breach'; }
   step(dt) {
     this.time += dt;
@@ -331,7 +334,7 @@ export class Game {
     const ri = this.district.routeMode === 'all' ? (this.spawnCounter++ % this.routes.length) : this.activeRoute;
     const route = this.routes[ri]; const p = posAt(route, 0);
     const hp = Math.round(def.hp * s.hpMult);
-    this.enemies.push({ id: ++this.rngId, type: s.type, name: def.name, hp, maxHp: hp, speed: def.speed, armor: def.armor, reward: def.reward, size: def.size, shape: def.shape, color: def.color,
+    this.enemies.push({ id: ++this.rngId, type: s.type, name: def.name, hp, maxHp: hp, speed: def.speed * this.tier.speed, armor: def.armor, reward: def.reward, size: def.size, shape: def.shape, color: def.color,
       tags: def.tags, boss: !!def.boss, hacker: def.hacker || null, regen: def.regen || 0, route, routeIdx: ri, dist: 0, x: p.x, y: p.y, ang: p.ang,
       burn: 0, burnDps: 0, blind: 0, stun: 0, contagion: 0, contagionDps: 0, spreadTick: 0, slowMul: 1, hacks: [], hitFlash: 0, dead: false, t: 0,
       ice: !!s.ice, iceRegen: 0 });
@@ -436,7 +439,7 @@ export class Game {
     S.combo = this.time - this.lastKillT <= COMBO_WINDOW ? Math.min(COMBO_CAP, S.combo + 1) : 0;
     this.lastKillT = this.time; if (S.combo > S.bestCombo) S.bestCombo = S.combo;
     const mult = this.comboMult();
-    Session.add(e.reward * SCORE_KILL * mult + (e.boss ? BOSS_KILL_BONUS : 0));
+    this.addScore(e.reward * SCORE_KILL * mult + (e.boss ? BOSS_KILL_BONUS : 0));
     if (Math.floor(S.combo / 5) > prevTier) this.text(e.x, e.y - 0.9, `COMBO x${mult.toFixed(1)}`, '#ff2a6d', 1.2);
   }
   firstInRange(x, y, range, exclude = null) {

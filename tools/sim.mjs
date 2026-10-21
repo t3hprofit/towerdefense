@@ -57,7 +57,7 @@ function bot(g) {
 }
 for (const d of DISTRICTS) {
   if (only && d.id !== only) continue;
-  const g = new Game(ui); ui.result = null; g.startDistrict(d);
+  const g = new Game(ui); ui.result = null; g.startDistrict(d, process.env.TIER || 'netrunner');
   const log = [];
   while (g.state === 'play') {
     bot(g);
