@@ -2,11 +2,31 @@
 import { SONGS, compileSong } from '../data/music.js';
 const SFX_SCALE = 0.6;
 const MUSIC_LEVEL = 0.35;
+// Instrument patches for the music voices (songs name them in src/data/music.js `voices`).
+//   oscs    layered oscillators: semi/detune relative to the note, gain relative to the patch,
+//           fm = { ratio, index, decay } adds a sine modulator on that oscillator's frequency.
+//   filter  lowpass sweeping f0 -> f1 Hz over ft seconds with resonance q (omit for none).
+//   env     amp envelope: attack, decay, sustain level (0 = pluck), release, in seconds.
+//   gain    loudness trim so the role volumes in playStep stay comparable across patches.
+//   send    how much goes to the tempo-synced delay.
+const PATCHES = {
+  fatbass:  { oscs: [{ type: 'sawtooth' }, { type: 'square', semi: -12, gain: 0.5 }], filter: { f0: 1400, f1: 300, q: 2, ft: 0.25 }, env: { a: 0.005, d: 0.2, s: 0.6, r: 0.05 }, gain: 1 },
+  acidbass: { oscs: [{ type: 'sawtooth' }], filter: { f0: 2600, f1: 220, q: 9, ft: 0.18 }, env: { a: 0.002, d: 0.15, s: 0.5, r: 0.03 }, gain: 1.3 },
+  subbass:  { oscs: [{ type: 'sine' }, { type: 'triangle', gain: 0.6 }, { type: 'sine', semi: 12, gain: 0.15 }], filter: { f0: 700, f1: 300, q: 1, ft: 0.3 }, env: { a: 0.01, d: 0.3, s: 0.8, r: 0.1 }, gain: 0.6 },
+  octbass:  { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 9, gain: 0.7 }, { type: 'square', semi: -12, gain: 0.4 }], filter: { f0: 1800, f1: 500, q: 3, ft: 0.12 }, env: { a: 0.003, d: 0.12, s: 0.5, r: 0.04 }, gain: 0.8 },
+  pwm:      { oscs: [{ type: 'square' }, { type: 'square', detune: 12, gain: 0.7 }], filter: { f0: 2800, f1: 1200, q: 1, ft: 0.2 }, env: { a: 0.01, d: 0.15, s: 0.7, r: 0.06 }, gain: 0.6 },
+  glass:    { oscs: [{ type: 'triangle' }, { type: 'sine', semi: 12, gain: 0.5 }], env: { a: 0.002, d: 0.25, s: 0, r: 0.05 }, gain: 1.8, send: 0.35 },
+  bell:     { oscs: [{ type: 'sine', fm: { ratio: 3.5, index: 1.5, decay: 0.4 } }], env: { a: 0.003, d: 0.6, s: 0, r: 0.1 }, gain: 1.2, send: 0.4 },
+  epiano:   { oscs: [{ type: 'sine', fm: { ratio: 1, index: 1.5, decay: 0.3 } }, { type: 'sine', semi: 12, gain: 0.2 }], env: { a: 0.005, d: 0.4, s: 0.3, r: 0.15 }, gain: 0.8, send: 0.3 },
+  pluck:    { oscs: [{ type: 'triangle' }, { type: 'triangle', semi: 12, gain: 0.4 }], filter: { f0: 5000, f1: 1200, q: 1, ft: 0.3 }, env: { a: 0.003, d: 0.45, s: 0, r: 0.05 }, gain: 2.0, send: 0.3 },
+  supersaw: { oscs: [{ type: 'sawtooth', detune: -12 }, { type: 'sawtooth' }, { type: 'sawtooth', detune: 12 }], filter: { f0: 3500, f1: 1800, q: 1, ft: 0.3 }, env: { a: 0.02, d: 0.2, s: 0.7, r: 0.12 }, gain: 0.55, send: 0.3 },
+  brass:    { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 6, gain: 0.6 }], filter: { f0: 400, f1: 2600, q: 2, ft: 0.12 }, env: { a: 0.03, d: 0.1, s: 0.8, r: 0.08 }, gain: 0.7, send: 0.25 },
+};
 class AudioEngine {
   constructor() {
     this.ctx = null; this.master = null; this.sfxGain = null; this.musicGain = null;
     this.sfxOn = true; this.sfxLevel = 1; this.musicOn = true; this.weaponGain = null; this.musicTimer = null; this.step = 0; this.nextNoteTime = 0;
-    this.track = 'menu'; this.song = null;
+    this.track = 'menu'; this.song = null; this.stepLen = 0.14; this.musicDelay = null;
     this.noiseBuf = null; this.lastPlayed = {};
   }
   init() {
@@ -20,6 +40,10 @@ class AudioEngine {
     // Weapon fire is the repetitive stuff; it gets its own quieter, low-passed bus.
     this.weaponGain = this.ctx.createGain(); this.weaponGain.gain.value = 0.45; const wlp = this.ctx.createBiquadFilter(); wlp.type = 'lowpass'; wlp.frequency.value = 2600; this.weaponGain.connect(wlp); wlp.connect(this.sfxGain);
     this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? MUSIC_LEVEL : 0; this.musicGain.connect(this.master);
+    // Tempo-synced feedback delay the music patches send to (delayTime is set per song).
+    this.musicDelay = this.ctx.createDelay(1); this.musicDelay.delayTime.value = 0.3;
+    const dfb = this.ctx.createGain(); dfb.gain.value = 0.3; const dlp = this.ctx.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
+    this.musicDelay.connect(dlp); dlp.connect(dfb); dfb.connect(this.musicDelay); dlp.connect(this.musicGain);
     const len = this.ctx.sampleRate * 1;
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -58,6 +82,48 @@ class AudioEngine {
   // Rate-limit spammy sfx so 20 turrets don't clip the mix.
   throttle(key, ms) { const n = performance.now(); if (this.lastPlayed[key] && n - this.lastPlayed[key] < ms) return false; this.lastPlayed[key] = n; return true; }
 
+  // Play one note on a music patch: layered oscillators -> optional swept lowpass -> ADSR gain.
+  voice(name, f, t, dur, vol, dest) {
+    const p = PATCHES[name] || PATCHES.supersaw; const ctx = this.ctx; const e = p.env;
+    const out = ctx.createGain(); const g = out.gain; const v = vol * (p.gain || 1);
+    const tA = t + e.a, tD = tA + e.d, hold = Math.max(t + dur, tD), tEnd = hold + e.r;
+    const sus = Math.max(v * e.s, 0.0001);
+    g.setValueAtTime(0.0001, t); g.linearRampToValueAtTime(v, tA); g.exponentialRampToValueAtTime(sus, tD);
+    g.setValueAtTime(sus, hold); g.exponentialRampToValueAtTime(0.0001, tEnd);
+    let input = out;
+    if (p.filter) {
+      const fl = ctx.createBiquadFilter(); fl.type = 'lowpass'; fl.Q.value = p.filter.q;
+      fl.frequency.setValueAtTime(p.filter.f0, t); fl.frequency.exponentialRampToValueAtTime(p.filter.f1, t + p.filter.ft);
+      fl.connect(out); input = fl;
+    }
+    for (const o of p.oscs) {
+      const osc = ctx.createOscillator(); osc.type = o.type; const of = f * Math.pow(2, (o.semi || 0) / 12);
+      osc.frequency.value = of; if (o.detune) osc.detune.value = o.detune;
+      if (o.fm) {
+        const mod = ctx.createOscillator(); mod.frequency.value = of * o.fm.ratio; const mg = ctx.createGain();
+        mg.gain.setValueAtTime(of * o.fm.index, t); mg.gain.exponentialRampToValueAtTime(of * o.fm.index * 0.02, t + o.fm.decay);
+        mod.connect(mg); mg.connect(osc.frequency); mod.start(t); mod.stop(tEnd + 0.02);
+      }
+      if (o.gain !== undefined && o.gain !== 1) { const og = ctx.createGain(); og.gain.value = o.gain; osc.connect(og); og.connect(input); } else osc.connect(input);
+      osc.start(t); osc.stop(tEnd + 0.02);
+    }
+    out.connect(dest);
+    if (p.send && this.musicDelay) { const sg = ctx.createGain(); sg.gain.value = p.send; out.connect(sg); sg.connect(this.musicDelay); }
+  }
+  // Schedule one sequencer step (bass, arp, lead, drum) of the current song at time t.
+  playStep(ev, t) {
+    const song = this.song, v = song.voices, stepLen = this.stepLen, m = this.musicGain;
+    const hz = semi => song.root * Math.pow(2, semi / 12);
+    if (ev.bass) this.voice(v.bass, hz(ev.bass.semi), t, stepLen * ev.bass.len * 0.8, 0.2, m);
+    if (ev.arp !== null) this.voice(v.arp, hz(ev.arp), t, stepLen * 0.8, 0.09, m);
+    if (ev.lead) this.voice(v.lead, hz(ev.lead.semi), t, stepLen * ev.lead.len * 0.9, 0.18, m);
+    const d = ev.drum;
+    if (d === 'k' || d === 'K') { this.tone({ f: 160, f2: 45, type: 'sine', dur: 0.2, vol: 0.45, dest: m, at: t }); this.noise({ dur: 0.012, vol: 0.12, hp: 1500, lp: 6000, dest: m, at: t }); }
+    if (d === 's' || d === 'S') { this.noise({ dur: 0.12, vol: 0.18, hp: 900, lp: 7000, dest: m, at: t }); this.tone({ f: 200, f2: 120, type: 'triangle', dur: 0.08, vol: 0.2, dest: m, at: t }); }
+    if (d === 'h' || d === 'K' || d === 'S') this.noise({ dur: 0.035, vol: 0.07, hp: 7000, lp: 12000, dest: m, at: t });
+    if (d === 'o') this.noise({ dur: 0.14, vol: 0.06, hp: 6000, lp: 12000, dest: m, at: t });
+  }
+
   play(name) {
     if (!this.ctx || !this.sfxOn) return;
     switch (name) {
@@ -92,7 +158,7 @@ class AudioEngine {
   }
 
   // Synthwave sequencer: plays a song from src/data/music.js (one per district plus 'menu') with a
-  // look-ahead timer. Bass, arp and lead are oscillators; kick/snare/hats are sine + filtered noise.
+  // look-ahead timer. Bass, arp and lead are PATCHES voices; kick/snare/hats are sine + filtered noise.
   // track: song id. Omitted = the last requested track, so toggling music back on resumes the right one.
   startMusic(track) {
     const switching = !!track && track !== this.track;
@@ -100,38 +166,21 @@ class AudioEngine {
     if (switching) this.stopMusic();
     if (!this.ctx || !this.musicOn || this.musicTimer) return;
     const song = this.song = compileSong(SONGS[this.track] || SONGS.menu);
-    const stepLen = 60 / song.bpm / 4; const v = song.voices;
-    const hz = semi => song.root * Math.pow(2, semi / 12);
+    const stepLen = this.stepLen = 60 / song.bpm / 4;
     const now = this.ctx.currentTime;
     this.step = 0; this.nextNoteTime = now + (switching ? 0.3 : 0.1);
+    this.musicDelay.delayTime.setValueAtTime(stepLen * 6, now);  // dotted eighth
     if (switching) {
       // Dip the bus so the old track's last scheduled notes fade instead of overlapping the new one.
       const g = this.musicGain.gain; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
       g.linearRampToValueAtTime(0, now + 0.2); g.setValueAtTime(0, now + 0.3); g.linearRampToValueAtTime(MUSIC_LEVEL, now + 0.6);
     }
-    const playStep = (ev, t) => {
-      const m = this.musicGain;
-      if (ev.bass) this.tone({ f: hz(ev.bass.semi), type: v.bass, dur: stepLen * ev.bass.len * 0.8, vol: 0.18, dest: m, at: t });
-      if (ev.arp !== null) this.tone({ f: hz(ev.arp), type: v.arp, dur: stepLen * 0.8, vol: 0.05, dest: m, at: t });
-      if (ev.lead) {
-        const f = hz(ev.lead.semi), dur = stepLen * ev.lead.len * 0.9;
-        // Plucked leads decay on their own clock and get a bright octave on the attack.
-        const env = v.pluck ? { dur, decay: v.pluck, attack: 0.003 } : { dur, attack: 0.02 };
-        this.tone({ f, type: v.lead, ...env, vol: 0.035, detune: 6, dest: m, at: t }); this.tone({ f, type: v.lead, ...env, vol: 0.035, detune: -6, dest: m, at: t });
-        if (v.pluck) this.tone({ f: f * 2, type: 'triangle', dur: 0.15, attack: 0.002, vol: 0.02, dest: m, at: t });
-      }
-      const d = ev.drum;
-      if (d === 'k' || d === 'K') this.tone({ f: 160, f2: 45, type: 'sine', dur: 0.2, vol: 0.45, dest: m, at: t });
-      if (d === 's' || d === 'S') { this.noise({ dur: 0.12, vol: 0.18, hp: 900, lp: 7000, dest: m, at: t }); this.tone({ f: 200, f2: 120, type: 'triangle', dur: 0.08, vol: 0.2, dest: m, at: t }); }
-      if (d === 'h' || d === 'K' || d === 'S') this.noise({ dur: 0.035, vol: 0.07, hp: 7000, lp: 12000, dest: m, at: t });
-      if (d === 'o') this.noise({ dur: 0.14, vol: 0.06, hp: 6000, lp: 12000, dest: m, at: t });
-    };
     const tick = () => {
       if (!this.ctx) return;
       // If timers stalled (background, throttling), skip ahead instead of bursting every missed note.
       if (this.nextNoteTime < this.ctx.currentTime) this.nextNoteTime = this.ctx.currentTime + 0.05;
       while (this.nextNoteTime < this.ctx.currentTime + 0.3) {
-        playStep(song.steps[this.step], this.nextNoteTime);
+        this.playStep(song.steps[this.step], this.nextNoteTime);
         this.nextNoteTime += stepLen; this.step++;
         if (this.step >= song.steps.length) this.step = song.loopStep;
       }

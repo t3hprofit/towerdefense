@@ -134,7 +134,9 @@ Canvas 2D at DPR ≤ 2. Per-district ground layer rendered once to an offscreen 
 shield break) on the main bus. SFX has FULL / LOW / OFF. Music is a step sequencer playing the
 songs in `src/data/music.js`: one per district plus a drumless `menu` track, each a 4-bar intro
 and verse / lead / bridge / chorus sections in a looped order (65–95 s before it repeats). Bass,
-arp and lead are oscillators; kick, snare and hats are a sine sweep and filtered noise. The UI
+arp and lead are patches from the `PATCHES` table in `audio.js` (layered oscillators through a
+swept lowpass with an ADSR, FM for the bell and e-piano, a tempo-synced delay send); each song
+names its own three. Kick, snare and hats are a sine sweep and filtered noise. The UI
 picks the track: `menu` on Play and on quit, the district id when a district card is tapped.
 
 ## PWA

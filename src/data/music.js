@@ -4,8 +4,7 @@
 // Song format
 //   bpm       tempo; one step is a 16th note (4 per beat, 16 per bar).
 //   root      Hz of the song's tonic in the bass register (A1 = 55).
-//   voices    oscillator types for the bass, arp and lead. voices.pluck = seconds: the lead is
-//             plucked (instant attack, decays in that time whatever the note length).
+//   voices    PATCHES names (src/core/audio.js) for the bass, arp and lead.
 //   sections  name -> {
 //     chords  one [semitones from root, 'm' | 'M' | '5'] per HALF bar (8 steps), so 8 entries =
 //             4 bars. '5' is an open fifth (no third).
@@ -46,13 +45,13 @@ const WATSON_SECTIONS = {
 export const SONGS = {
   // Main menu and district select: the Watson theme without drums.
   menu: {
-    bpm: 107, root: 55, voices: { bass: 'sawtooth', arp: 'square', lead: 'square' },
+    bpm: 107, root: 55, voices: { bass: 'fatbass', arp: 'bell', lead: 'supersaw' },
     sections: { I: WATSON_SECTIONS.I, B: { ...WATSON_SECTIONS.B, drums: null }, D: { ...WATSON_SECTIONS.D, drums: null } },
     order: ['I', 'B', 'I', 'D'], loopFrom: 0,
   },
   // Watson: the original A minor loop, grown into a full tune.
   watson: {
-    bpm: 107, root: 55, voices: { bass: 'sawtooth', arp: 'square', lead: 'square' },
+    bpm: 107, root: 55, voices: { bass: 'fatbass', arp: 'pwm', lead: 'supersaw' },
     sections: WATSON_SECTIONS,
     order: ['I', 'A', 'B', 'A', 'B', 'C', 'D', 'D', 'B'], loopFrom: 1,
   },
@@ -60,7 +59,7 @@ export const SONGS = {
   // open-fifth chords instead of triads, a plucked koto-style lead with grace notes and tremolo,
   // and a sparse taiko-like kick pattern.
   westbrook: {
-    bpm: 118, root: 73.42, voices: { bass: 'sawtooth', arp: 'square', lead: 'triangle', pluck: 0.45 },
+    bpm: 118, root: 73.42, voices: { bass: 'fatbass', arp: 'glass', lead: 'pluck' },
     sections: {
       I: { chords: [[0, '5'], [0, '5'], [0, '5'], [0, '5'], [0, '5'], [0, '5'], [1, '5'], [0, '5']],
         bass: '1___1_..1___1_8_', arp: [0, 2, 3, 4], drums: null,
@@ -81,7 +80,7 @@ export const SONGS = {
   },
   // Heywood: slower, F# phrygian with a tresillo bass for the Valentinos' turf.
   heywood: {
-    bpm: 100, root: 46.25, voices: { bass: 'sawtooth', arp: 'square', lead: 'sawtooth' },
+    bpm: 100, root: 46.25, voices: { bass: 'fatbass', arp: 'epiano', lead: 'brass' },
     sections: {
       I: { chords: [[0, 'm'], [0, 'm'], [1, 'M'], [1, 'M'], [0, 'm'], [0, 'm'], [1, 'M'], [1, 'M']],
         bass: '1__1__1_1__1__5_', arp: [0, 2, 3, 2], drums: null },
@@ -101,7 +100,7 @@ export const SONGS = {
   },
   // Santo Domingo: industrial techno, C minor, straight eighths and short stabs.
   santo: {
-    bpm: 128, root: 65.41, voices: { bass: 'sawtooth', arp: 'square', lead: 'sawtooth' },
+    bpm: 128, root: 65.41, voices: { bass: 'acidbass', arp: 'pwm', lead: 'brass' },
     sections: {
       I: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [-2, 'M'], [-2, 'M']],
         bass: '1.1.1.1.1.1.1.1.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: null },
@@ -121,7 +120,7 @@ export const SONGS = {
   },
   // Pacifica: slow, half-time, G minor, soft voices and a minor-second lead for the Voodoo Boys.
   pacifica: {
-    bpm: 92, root: 49, voices: { bass: 'sawtooth', arp: 'triangle', lead: 'triangle' },
+    bpm: 92, root: 49, voices: { bass: 'subbass', arp: 'bell', lead: 'epiano' },
     sections: {
       I: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [8, 'M'], [8, 'M'], [7, 'M'], [7, 'M']],
         bass: '1___1__.1___..1.', arp: [0, 2, 1, 3], drums: null },
@@ -141,7 +140,7 @@ export const SONGS = {
   },
   // City Center: fast B minor with an octave bass and a soaring hook for Arasaka Tower.
   center: {
-    bpm: 132, root: 61.74, voices: { bass: 'sawtooth', arp: 'square', lead: 'square' },
+    bpm: 132, root: 61.74, voices: { bass: 'octbass', arp: 'glass', lead: 'supersaw' },
     sections: {
       I: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M']],
         bass: '1_1_1_1_1_1_1_1_', arp: [0, 2, 3, 2], drums: null },
