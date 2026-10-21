@@ -24,9 +24,15 @@ export function generateWave(district, wave, tierId = 'netrunner') {
     let count = Math.min(maxCount, rng.int(2, 6));
     if (def.pts >= 6) count = Math.min(count, 2);
     if (def.hacker) count = Math.min(count, 2 + Math.floor(wave / 4));
-    if (def.tags.includes('elite')) count = Math.min(count, 1 + Math.floor(wave / 9));
     groups.push({ type: pick.type, count, interval: def.speed > 1.5 ? 0.45 : def.pts >= 6 ? 1.3 : 0.75, hpMult });
     left -= count * def.pts;
+  }
+  // Elites: rolled separately from the budget so they are rare but reliable. One per eligible wave at
+  // `chance`, guaranteed on wave 9, two on the boss wave at the top tiers.
+  for (const el of district.elites || []) {
+    if (wave < el.from) continue;
+    const n = wave === 9 ? 1 : isBoss ? (tier.hp >= 1.5 ? 2 : 0) : (rng.next() < el.chance ? 1 : 0);
+    if (n) groups.splice(Math.max(1, Math.floor(groups.length / 2)), 0, { type: el.type, count: n, interval: 2, hpMult });
   }
   if (isBoss) {
     // Bosses scale by district order, not the per-map base difficulty, so each one is tougher than the last.
