@@ -41,6 +41,10 @@ Heywood 13 ★★, Santo 20 ★★★, Pacifica 20 ★★★ (8 towers, 20 hacks
 feedback: breach urgency good, Arc Nodes carried, reroute under-used, no changes requested).
 Blackwall Watson: lost on wave 7.
 
+First-time player (owner's coworker), Street Kid Watson: 19 ★★★, 6 towers, 15 hacks, **0 daemons**
+(never opened a breach), 3 purges, 11 access points, 1 leak. Street Kid is landing where intended for
+new players; breach discoverability for non-Cyberpunk players is an open question.
+
 ## Knobs
 
 | Knob | Where | Current | Effect |
