@@ -94,7 +94,8 @@ button { font-family: inherit; color: inherit; }
 .consent p { margin: 0; font-size: 12px; line-height: 1.35; color: var(--dim); }
 .consent .row { display: flex; gap: 10px; }
 .consent .row .btn { flex: 1; }
-.menu-foot { font-size: 11px; color: var(--dim); letter-spacing: 0.1em; }
+.consent a, .menu-foot a { color: var(--cyan); }
+.menu-foot { font-size: 11px; color: var(--dim); letter-spacing: 0.1em; text-align: center; line-height: 2; }
 .logo { text-align: center; }
 .logo-top { font-size: 22px; letter-spacing: 0.5em; color: var(--yellow); font-weight: 700; text-shadow: 0 0 12px rgba(252,238,10,0.6); }
 .logo-main { font-size: 72px; font-weight: 900; letter-spacing: 0.08em; color: var(--cyan); line-height: 1; text-shadow: 0 0 20px rgba(0,240,255,0.7), 0 0 60px rgba(0,240,255,0.3); position: relative; }

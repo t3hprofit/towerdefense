@@ -2,7 +2,7 @@
 // 'ncb-dev' is replaced with the commit SHA by the deploy workflow, so every deploy is a new cache.
 const CACHE = 'ncb-dev';
 const ASSETS = [
-  './', './index.html', './manifest.webmanifest', './css/style.css',
+  './', './index.html', './privacy.html', './manifest.webmanifest', './css/style.css',
   './src/main.js', './src/config/tokens.js', './src/core/rng.js', './src/core/save.js', './src/core/session.js', './src/core/audio.js', './src/core/analytics.js',
   './src/data/towers.js', './src/data/enemies.js', './src/data/quickhacks.js', './src/data/daemons.js', './src/data/districts.js', './src/data/tiers.js', './src/data/music.js',
   './src/game/path.js', './src/game/waves.js', './src/game/breach.js', './src/game/game.js',
