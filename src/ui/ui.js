@@ -19,7 +19,7 @@ export class UI {
   }
   bind(game, onQuit) {
     this.game = game; this.onQuit = onQuit;
-    $('#btn-play').onclick = () => { Audio.init(); Audio.startMusic(); this.showScreen('districts'); };
+    $('#btn-play').onclick = () => { Audio.init(); Audio.startMusic('menu'); this.showScreen('districts'); };
     $('#btn-howto').onclick = () => this.showScreen('howto');
     $('#btn-back-howto').onclick = () => this.showScreen('menu');
     $('#btn-back-menu').onclick = () => this.showScreen('menu');
@@ -44,7 +44,7 @@ export class UI {
     if (name === 'districts') this.renderDistricts();
   }
   hideScreens() { for (const k in this.screens) this.screens[k].classList.add('hidden'); }
-  quit() { this.game.state = 'menu'; this.game.district = null; this.els.top.classList.add('hidden'); this.els.bottom.classList.add('hidden'); this.els.ticker.classList.add('hidden'); this.closePanel(); this.showScreen('districts'); if (this.onQuit) this.onQuit(); }
+  quit() { this.game.state = 'menu'; this.game.district = null; Audio.startMusic('menu'); this.els.top.classList.add('hidden'); this.els.bottom.classList.add('hidden'); this.els.ticker.classList.add('hidden'); this.closePanel(); this.showScreen('districts'); if (this.onQuit) this.onQuit(); }
   pause(on) {
     if (this.game.state !== 'play' && on) return;
     this.game.paused = on; this.screens.pause.classList.toggle('hidden', !on);
@@ -67,7 +67,7 @@ export class UI {
       const card = document.createElement('button'); card.className = 'dcard' + (unlocked ? '' : ' locked'); card.style.setProperty('--c', d.color);
       const stars = [1, 2, 3].map(i => `<span class="${rec.stars >= i ? '' : 'off'}">★</span>`).join('');
       card.innerHTML = `<div class="num">${String(d.num).padStart(2, '0')}</div><div class="info"><div class="nm">${d.name}</div><div class="sub">${d.sub}${rec.bestWave ? ` · best wave ${rec.bestWave}` : ''}${rec.bestScore ? ` · <span class="bs">best score ${rec.bestScore.toLocaleString('en-US')}</span>` : ''}</div><div class="desc">${d.desc}</div></div><div class="stars">${stars}</div>`;
-      if (unlocked) card.onclick = () => { Audio.init(); Audio.startMusic(); Audio.play('bselect'); this.hideScreens(); this.game.startDistrict(d); };
+      if (unlocked) card.onclick = () => { Audio.init(); Audio.startMusic(d.id); Audio.play('bselect'); this.hideScreens(); this.game.startDistrict(d); };
       list.appendChild(card);
     }
   }

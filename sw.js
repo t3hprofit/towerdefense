@@ -4,7 +4,7 @@ const CACHE = 'ncb-dev';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './src/main.js', './src/config/tokens.js', './src/core/rng.js', './src/core/save.js', './src/core/session.js', './src/core/audio.js',
-  './src/data/towers.js', './src/data/enemies.js', './src/data/quickhacks.js', './src/data/daemons.js', './src/data/districts.js', './src/data/tiers.js',
+  './src/data/towers.js', './src/data/enemies.js', './src/data/quickhacks.js', './src/data/daemons.js', './src/data/districts.js', './src/data/tiers.js', './src/data/music.js',
   './src/game/path.js', './src/game/waves.js', './src/game/breach.js', './src/game/game.js',
   './src/render/renderer.js', './src/render/themes.js', './src/ui/ui.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',

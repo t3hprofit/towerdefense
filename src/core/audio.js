@@ -1,9 +1,12 @@
 // Fully synthesized audio: no asset files. Everything is oscillators + noise through the WebAudio API.
+import { SONGS, compileSong } from '../data/music.js';
 const SFX_SCALE = 0.6;
+const MUSIC_LEVEL = 0.35;
 class AudioEngine {
   constructor() {
     this.ctx = null; this.master = null; this.sfxGain = null; this.musicGain = null;
     this.sfxOn = true; this.sfxLevel = 1; this.musicOn = true; this.weaponGain = null; this.musicTimer = null; this.step = 0; this.nextNoteTime = 0;
+    this.track = 'menu'; this.song = null;
     this.noiseBuf = null; this.lastPlayed = {};
   }
   init() {
@@ -16,7 +19,7 @@ class AudioEngine {
     this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = this.sfxOn ? this.sfxLevel * SFX_SCALE : 0; this.sfxGain.connect(this.master);
     // Weapon fire is the repetitive stuff; it gets its own quieter, low-passed bus.
     this.weaponGain = this.ctx.createGain(); this.weaponGain.gain.value = 0.45; const wlp = this.ctx.createBiquadFilter(); wlp.type = 'lowpass'; wlp.frequency.value = 2600; this.weaponGain.connect(wlp); wlp.connect(this.sfxGain);
-    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? 0.35 : 0; this.musicGain.connect(this.master);
+    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? MUSIC_LEVEL : 0; this.musicGain.connect(this.master);
     const len = this.ctx.sampleRate * 1;
     this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
     const d = this.noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -24,21 +27,28 @@ class AudioEngine {
   // level: 1 = full, 0.5 = low, 0 = off
   // FULL (1) maps to 60% of the bus so effects sit a little above the music rather than three times it.
   setSfx(level) { const v = level === true ? 1 : level === false ? 0 : Number(level); this.sfxLevel = v > 0 ? v : this.sfxLevel; this.sfxOn = v > 0; if (this.sfxGain) this.sfxGain.gain.value = v * SFX_SCALE; }
-  setMusic(on) { this.musicOn = on; if (this.musicGain) this.musicGain.gain.value = on ? 0.35 : 0; if (on) this.startMusic(); else this.stopMusic(); }
+  setMusic(on) { this.musicOn = on; this.musicLevel(on ? MUSIC_LEVEL : 0); if (on) this.startMusic(); else this.stopMusic(); }
+  // Set the music bus level, cancelling any ramp the track switch scheduled.
+  musicLevel(v) {
+    if (!this.musicGain) return;
+    const g = this.musicGain.gain; const now = this.ctx.currentTime;
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
+    g.setValueAtTime(v, now);
+  }
 
-  tone({ f = 440, f2 = null, type = 'square', dur = 0.1, vol = 0.3, attack = 0.005, decay = null, dest = null, delay = 0, at = null }) {
+  tone({ f = 440, f2 = null, type = 'square', dur = 0.1, vol = 0.3, attack = 0.005, decay = null, dest = null, delay = 0, at = null, detune = 0 }) {
     if (!this.ctx) return;
     const t0 = at !== null ? Math.max(at, this.ctx.currentTime) : this.ctx.currentTime + delay;
     const o = this.ctx.createOscillator(); const g = this.ctx.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, t0);
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (detune) o.detune.value = detune;
     if (f2 !== null) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t0 + dur);
     g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(vol, t0 + attack);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + (decay || dur));
     o.connect(g); g.connect(dest || this.sfxGain); o.start(t0); o.stop(t0 + (decay || dur) + 0.02);
   }
-  noise({ dur = 0.2, vol = 0.3, hp = 200, lp = 8000, delay = 0, dest = null }) {
+  noise({ dur = 0.2, vol = 0.3, hp = 200, lp = 8000, delay = 0, dest = null, at = null }) {
     if (!this.ctx) return;
-    const t0 = this.ctx.currentTime + delay;
+    const t0 = at !== null ? Math.max(at, this.ctx.currentTime) : this.ctx.currentTime + delay;
     const s = this.ctx.createBufferSource(); s.buffer = this.noiseBuf;
     const g = this.ctx.createGain(); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     const h = this.ctx.createBiquadFilter(); h.type = 'highpass'; h.frequency.value = hp;
@@ -81,22 +91,43 @@ class AudioEngine {
     }
   }
 
-  // Minimal synthwave loop: bass sequence + arpeggio, scheduled with a look-ahead timer.
-  startMusic() {
+  // Synthwave sequencer: plays a song from src/data/music.js (one per district plus 'menu') with a
+  // look-ahead timer. Bass, arp and lead are oscillators; kick/snare/hats are sine + filtered noise.
+  // track: song id. Omitted = the last requested track, so toggling music back on resumes the right one.
+  startMusic(track) {
+    const switching = !!track && track !== this.track;
+    if (track) this.track = track;
+    if (switching) this.stopMusic();
     if (!this.ctx || !this.musicOn || this.musicTimer) return;
-    this.step = 0; this.nextNoteTime = this.ctx.currentTime + 0.1;
-    const bass = [55, 55, 55, 55, 65.4, 65.4, 49, 49];      // A1 A1 A1 A1 C2 C2 G1 G1
-    const arp = [220, 261.6, 329.6, 440, 329.6, 261.6];      // Am arpeggio
-    const stepLen = 0.14;
+    const song = this.song = compileSong(SONGS[this.track] || SONGS.menu);
+    const stepLen = 60 / song.bpm / 4; const v = song.voices;
+    const hz = semi => song.root * Math.pow(2, semi / 12);
+    const now = this.ctx.currentTime;
+    this.step = 0; this.nextNoteTime = now + (switching ? 0.3 : 0.1);
+    if (switching) {
+      // Dip the bus so the old track's last scheduled notes fade instead of overlapping the new one.
+      const g = this.musicGain.gain; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
+      g.linearRampToValueAtTime(0, now + 0.2); g.setValueAtTime(0, now + 0.3); g.linearRampToValueAtTime(MUSIC_LEVEL, now + 0.6);
+    }
+    const playStep = (ev, t) => {
+      const m = this.musicGain;
+      if (ev.bass) this.tone({ f: hz(ev.bass.semi), type: v.bass, dur: stepLen * ev.bass.len * 0.8, vol: 0.18, dest: m, at: t });
+      if (ev.arp !== null) this.tone({ f: hz(ev.arp), type: v.arp, dur: stepLen * 0.8, vol: 0.05, dest: m, at: t });
+      if (ev.lead) { const f = hz(ev.lead.semi), dur = stepLen * ev.lead.len * 0.9; this.tone({ f, type: v.lead, dur, vol: 0.035, attack: 0.02, detune: 6, dest: m, at: t }); this.tone({ f, type: v.lead, dur, vol: 0.035, attack: 0.02, detune: -6, dest: m, at: t }); }
+      const d = ev.drum;
+      if (d === 'k' || d === 'K') this.tone({ f: 160, f2: 45, type: 'sine', dur: 0.2, vol: 0.45, dest: m, at: t });
+      if (d === 's' || d === 'S') { this.noise({ dur: 0.12, vol: 0.18, hp: 900, lp: 7000, dest: m, at: t }); this.tone({ f: 200, f2: 120, type: 'triangle', dur: 0.08, vol: 0.2, dest: m, at: t }); }
+      if (d === 'h' || d === 'K' || d === 'S') this.noise({ dur: 0.035, vol: 0.07, hp: 7000, lp: 12000, dest: m, at: t });
+      if (d === 'o') this.noise({ dur: 0.14, vol: 0.06, hp: 6000, lp: 12000, dest: m, at: t });
+    };
     const tick = () => {
       if (!this.ctx) return;
       // If timers stalled (background, throttling), skip ahead instead of bursting every missed note.
       if (this.nextNoteTime < this.ctx.currentTime) this.nextNoteTime = this.ctx.currentTime + 0.05;
       while (this.nextNoteTime < this.ctx.currentTime + 0.3) {
-        const t = this.nextNoteTime; const s = this.step;
-        if (s % 2 === 0) this.tone({ f: bass[Math.floor(s / 4) % bass.length], type: 'sawtooth', dur: stepLen * 1.6, vol: 0.18, dest: this.musicGain, at: t });
-        this.tone({ f: arp[s % arp.length] * (Math.floor(s / 32) % 2 ? 1.5 : 1), type: 'square', dur: stepLen * 0.8, vol: 0.05, dest: this.musicGain, at: t });
+        playStep(song.steps[this.step], this.nextNoteTime);
         this.nextNoteTime += stepLen; this.step++;
+        if (this.step >= song.steps.length) this.step = song.loopStep;
       }
     };
     this.musicTimer = setInterval(tick, 100);

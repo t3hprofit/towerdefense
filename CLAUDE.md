@@ -15,6 +15,7 @@ dependencies. Everything (art, audio, icons) is generated in code. Read this fil
 | `src/game/breach.js` | Breach Protocol puzzle logic (row/column alternation, planted solvable path). |
 | `src/game/path.js` | Route expansion (waypoints → polyline, cells, distances). |
 | `src/data/*.js` | Content: towers, enemies, quickhacks, daemons, districts (maps), tiers (difficulty). |
+| `src/data/music.js` | Songs: one per district plus `menu`, as chords / bass / arp / lead / drum patterns. Format documented at the top of the file; `src/core/audio.js` sequences them. |
 | `src/render/renderer.js` | Canvas drawing. `src/render/themes.js` per-district ground layer + ambient particles. |
 | `src/ui/ui.js` | All DOM: menus, trays, panels, tip strip, breach overlay, results, toasts. |
 | `src/core/` | `audio.js` (synth SFX + music), `save.js` (localStorage), `session.js` (sessionStorage score), `rng.js`. |
