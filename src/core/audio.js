@@ -179,12 +179,15 @@ class AudioEngine {
       case 'boss': [110, 110, 110, 82].forEach((f, i) => { this.tone({ f, type: 'sawtooth', dur: 0.35, vol: 0.3, delay: i * 0.3 }); this.noise({ dur: 0.2, vol: 0.1, hp: 80, lp: 500, delay: i * 0.3 }); }); break;
       case 'blip': this.tone({ f: 1400, type: 'square', dur: 0.05, vol: 0.15 }); break;
       case 'bselect': this.tone({ f: 880, f2: 1320, type: 'square', dur: 0.08, vol: 0.18 }); break;
-      // Jacking in: a rising sweep, a burst of data, three handshake blips and a low thump as the link opens.
+      // Jacking in. Starts with a click and a mid blip at t=0 so it is audible the instant the button
+      // is hit on a phone speaker (nothing below ~300 Hz carries there), then a sweep, data burst,
+      // handshake blips and a low thump as the link opens.
       case 'jackin':
-        this.tone({ f: 120, f2: 960, type: 'sawtooth', dur: 0.35, vol: 0.18 });
-        this.noise({ dur: 0.08, vol: 0.1, hp: 2000, lp: 9000, delay: 0.1 });
-        [1200, 1600, 2400].forEach((f, i) => this.tone({ f, type: 'square', dur: 0.05, vol: 0.1, delay: 0.26 + i * 0.07 }));
-        this.tone({ f: 70, f2: 40, type: 'sine', dur: 0.3, vol: 0.3, delay: 0.3 }); this.noise({ dur: 0.25, vol: 0.1, hp: 80, lp: 700, delay: 0.3 });
+        this.noise({ dur: 0.04, vol: 0.15, hp: 3000, lp: 10000 }); this.tone({ f: 1400, f2: 2000, type: 'square', dur: 0.05, vol: 0.12 });
+        this.tone({ f: 320, f2: 1200, type: 'sawtooth', dur: 0.28, vol: 0.16 });
+        this.noise({ dur: 0.08, vol: 0.1, hp: 2000, lp: 9000, delay: 0.08 });
+        [1200, 1600, 2400].forEach((f, i) => this.tone({ f, type: 'square', dur: 0.05, vol: 0.1, delay: 0.14 + i * 0.06 }));
+        this.tone({ f: 90, f2: 45, type: 'sine', dur: 0.3, vol: 0.3, delay: 0.22 }); this.noise({ dur: 0.25, vol: 0.1, hp: 80, lp: 700, delay: 0.22 });
         break;
       case 'daemon': [523, 659, 784, 1047].forEach((f, i) => this.tone({ f, type: 'square', dur: 0.14, vol: 0.18, delay: i * 0.08 })); break;
       case 'fail': [300, 250, 200].forEach((f, i) => this.tone({ f, type: 'sawtooth', dur: 0.2, vol: 0.2, delay: i * 0.15 })); break;
