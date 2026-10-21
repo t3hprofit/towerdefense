@@ -149,7 +149,15 @@ button { font-family: inherit; color: inherit; }
 .tip .tc { color: var(--yellow); font-weight: 700; margin-left: 6px; }
 .tip .tc.ram { color: var(--cyan); }
 
-/* ---------- Toasts ---------- */
+/* ---------- Ticker (replaces map toasts) ---------- */
+.ticker { flex: 0 0 auto; order: 0; height: 24px; display: flex; align-items: center; justify-content: center; padding: 0 10px; background: rgba(8,8,18,0.98); border-top: 1px solid var(--line); overflow: hidden; }
+.ticker span { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: var(--cyan); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; transition: opacity 0.25s; }
+.ticker.warn span { color: var(--red); } .ticker.good span { color: var(--green); } .ticker.pink span { color: var(--pink); }
+.ticker.flash span { animation: tickIn 0.25s ease-out; }
+@keyframes tickIn { from { transform: translateY(6px); opacity: 0; } }
+.ticker.idle span { opacity: 0.35; }
+
+/* ---------- Toasts (legacy, unused) ---------- */
 #toasts { position: absolute; top: 10px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; z-index: 8; }
 .toast { background: rgba(6,6,14,0.9); border: 1px solid var(--cyan); color: var(--cyan); padding: 6px 14px; font-size: 13px; letter-spacing: 0.1em; font-weight: 700; animation: toastIn 0.25s ease-out; max-width: 92%; text-align: center; }
 .toast.warn { border-color: var(--red); color: var(--red); }

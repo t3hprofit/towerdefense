@@ -14,7 +14,7 @@ const fmtNum = (n) => Number(n).toLocaleString('en-US');
 export class UI {
   constructor() {
     this.game = null; this.tab = 'build'; this.breachEl = $('#screen-breach'); this.lastHud = {};
-    this.els = { tip: $('#tip'), top: $('#hud-top'), bottom: $('#hud-bottom'), panel: $('#panel'), toasts: $('#toasts'), trayBuild: $('#tray-build'), trayHacks: $('#tray-hacks'), waveInfo: $('#wave-info'), btnWave: $('#btn-wave'), btnBreach: $('#btn-breach'), btnSpeed: $('#btn-speed'), btnPause: $('#btn-pause') };
+    this.els = { tip: $('#tip'), ticker: $('#ticker'), tickerText: $('#ticker-text'), top: $('#hud-top'), bottom: $('#hud-bottom'), panel: $('#panel'), trayBuild: $('#tray-build'), trayHacks: $('#tray-hacks'), waveInfo: $('#wave-info'), btnWave: $('#btn-wave'), btnBreach: $('#btn-breach'), btnSpeed: $('#btn-speed'), btnPause: $('#btn-pause') };
     this.screens = { menu: $('#screen-menu'), districts: $('#screen-districts'), howto: $('#screen-howto'), breach: $('#screen-breach'), result: $('#screen-result'), pause: $('#screen-pause'), intro: $('#screen-intro') };
   }
   bind(game, onQuit) {
@@ -44,7 +44,7 @@ export class UI {
     if (name === 'districts') this.renderDistricts();
   }
   hideScreens() { for (const k in this.screens) this.screens[k].classList.add('hidden'); }
-  quit() { this.game.state = 'menu'; this.game.district = null; this.els.top.classList.add('hidden'); this.els.bottom.classList.add('hidden'); this.closePanel(); this.showScreen('districts'); if (this.onQuit) this.onQuit(); }
+  quit() { this.game.state = 'menu'; this.game.district = null; this.els.top.classList.add('hidden'); this.els.bottom.classList.add('hidden'); this.els.ticker.classList.add('hidden'); this.closePanel(); this.showScreen('districts'); if (this.onQuit) this.onQuit(); }
   pause(on) {
     if (this.game.state !== 'play' && on) return;
     this.game.paused = on; this.screens.pause.classList.toggle('hidden', !on);
@@ -74,7 +74,7 @@ export class UI {
 
   // ---------- In-game HUD ----------
   onDistrictStart() {
-    this.hideScreens(); this.els.top.classList.remove('hidden'); this.els.bottom.classList.remove('hidden'); this.closePanel();
+    this.hideScreens(); this.els.top.classList.remove('hidden'); this.els.bottom.classList.remove('hidden'); this.els.ticker.classList.remove('hidden'); this.els.tickerText.textContent = ''; this.tq = []; this.closePanel();
     this.els.btnSpeed.textContent = '1×'; this.buildTrays(); this.setTab('build'); this.refreshTrays(); this.lastHud = {};
     this.toast(`${this.game.district.name} · ${this.game.district.sub} · ${this.game.tier.name}`, 'default', 2600);
     if (window.__onResize) window.__onResize();
@@ -190,12 +190,21 @@ export class UI {
     p.querySelector('#p-jack').onclick = () => g.jackIn(ap);
   }
 
-  // ---------- Toasts ----------
+  // ---------- Ticker ----------
+  // Messages queue through a single line under the map. Each shows for at least MIN ms so bursts
+  // (wave cleared + charge acquired + hint) are all readable; the queue is capped so it never lags.
   toast(msg, kind = 'default', ms = 2200) {
-    const el = document.createElement('div'); el.className = 'toast' + (kind !== 'default' ? ' ' + kind : ''); el.textContent = msg;
-    this.els.toasts.appendChild(el);
-    while (this.els.toasts.children.length > 2) this.els.toasts.firstChild.remove();
-    setTimeout(() => el.classList.add('fade'), ms); setTimeout(() => el.remove(), ms + 450);
+    this.tq = this.tq || []; this.tq.push({ msg, kind, ms: Math.min(ms, 3200) });
+    if (this.tq.length > 4) this.tq.splice(0, this.tq.length - 4);
+    if (!this.tickerBusy) this.nextTick();
+  }
+  nextTick() {
+    const t = this.els.ticker; const item = this.tq && this.tq.shift();
+    if (!item) { this.tickerBusy = false; t.classList.add('idle'); return; }
+    this.tickerBusy = true; t.className = 'ticker flash' + (item.kind !== 'default' ? ' ' + item.kind : '');
+    this.els.tickerText.textContent = item.msg; clearTimeout(this.tickerTimer);
+    const MIN = 1100; const hold = this.tq.length ? Math.max(MIN, item.ms * 0.6) : item.ms;
+    this.tickerTimer = setTimeout(() => this.nextTick(), hold);
   }
 
   // ---------- One-time intro cards ----------

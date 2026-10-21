@@ -35,7 +35,7 @@ dependencies. Everything (art, audio, icons) is generated in code. Read this fil
 
 - The ICE Deck unlocks at Heywood (district 3), **not earlier**. Watson and Westbrook are meant to be played without a firewall.
 - Losses record **half** score toward the district best and zero stars.
-- Quickhack/tower descriptions live in the strip over the wave bar, **never** as toasts at the top (they covered the spawn row).
+- Nothing is ever drawn over the map: tower/quickhack descriptions live in the strip over the wave bar, and all game messages go through the one-line **ticker** under the map (`ui.toast()` queues into it). No overlay toasts on the field.
 - The game must **not** auto-switch trays. The QUICKHACKS tab pulses when a shielded enemy is present; that is the only prompt.
 - A tap on the field while a panel is open only dismisses the panel. It never builds or casts.
 - A boss reaching the core is an immediate loss, never a 5-core leak.

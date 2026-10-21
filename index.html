@@ -20,12 +20,14 @@
     <!-- Battlefield -->
     <div id="field">
       <canvas id="game"></canvas>
-      <div id="toasts"></div>
       <div id="panel" class="panel hidden"></div>
       <button class="btn primary" id="btn-wave">START WAVE</button>
     </div>
 
-    <!-- Top HUD -->
+    <!-- Ticker: all in-game messages live here, never over the map -->
+    <div id="ticker" class="ticker hidden"><span id="ticker-text"></span></div>
+
+    <!-- Stats bar -->
     <header id="hud-top" class="hud hidden">
       <div class="stat" id="stat-eddies"><span class="lbl">€$</span><span class="val" data-v="eddies">0</span></div>
       <div class="stat" id="stat-lives"><span class="lbl">CORE</span><span class="val" data-v="lives">20</span></div>
