@@ -23,9 +23,9 @@ export class UI {
     $('#btn-howto').onclick = () => this.showScreen('howto');
     $('#btn-back-howto').onclick = () => this.showScreen('menu');
     $('#btn-back-menu').onclick = () => this.showScreen('menu');
-    $('#btn-sfx').onclick = () => { const v = !Save.data.settings.sfx; Save.setSetting('sfx', v); Audio.init(); Audio.setSfx(v); this.syncSettings(); Audio.play('blip'); };
+    $('#btn-sfx').onclick = () => { const cur = this.sfxLevel(); const v = cur === 1 ? 0.5 : cur === 0.5 ? 0 : 1; Save.setSetting('sfx', v); Audio.init(); Audio.setSfx(v); this.syncSettings(); Audio.play('blip'); };
     $('#btn-music').onclick = () => { const v = !Save.data.settings.music; Save.setSetting('music', v); Audio.init(); Audio.setMusic(v); this.syncSettings(); };
-    $('#btn-reset').onclick = () => { if (confirm('Wipe all progress?')) { Save.reset(); Audio.setSfx(Save.data.settings.sfx); Audio.setMusic(Save.data.settings.music); this.syncSettings(); this.toast('Save wiped', 'warn'); } };
+    $('#btn-reset').onclick = () => { if (confirm('Wipe all progress?')) { Save.reset(); Audio.setSfx(1); Audio.setMusic(Save.data.settings.music); this.syncSettings(); this.toast('Save wiped', 'warn'); } };
     document.querySelectorAll('.tab[data-tab]').forEach(b => b.onclick = () => this.setTab(b.dataset.tab));
     this.els.btnBreach.onclick = () => { Audio.play('blip'); game.openBreach(); };
     this.els.btnWave.onclick = () => game.startWave();
@@ -35,9 +35,10 @@ export class UI {
     $('#btn-restart').onclick = () => { Audio.init(); this.pause(false); game.startDistrict(game.district); };
     $('#btn-quit').onclick = () => { Audio.init(); this.pause(false); this.quit(); };
     this.syncSettings();
-    Audio.setSfx(Save.data.settings.sfx); Audio.setMusic(Save.data.settings.music);
+    Audio.setSfx(this.sfxLevel()); Audio.setMusic(Save.data.settings.music);
   }
-  syncSettings() { $('#btn-sfx').textContent = 'SFX: ' + (Save.data.settings.sfx ? 'ON' : 'OFF'); $('#btn-music').textContent = 'MUSIC: ' + (Save.data.settings.music ? 'ON' : 'OFF'); }
+  sfxLevel() { const s = Save.data.settings.sfx; return s === true ? 1 : s === false ? 0 : Number(s) || 0; }
+  syncSettings() { const l = this.sfxLevel(); $('#btn-sfx').textContent = 'SFX: ' + (l === 1 ? 'FULL' : l === 0.5 ? 'LOW' : 'OFF'); $('#btn-music').textContent = 'MUSIC: ' + (Save.data.settings.music ? 'ON' : 'OFF'); }
   showScreen(name) {
     for (const k in this.screens) this.screens[k].classList.toggle('hidden', k !== name);
     if (name === 'districts') this.renderDistricts();
