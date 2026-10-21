@@ -15,17 +15,40 @@ export function generateWave(district, wave, tierId = 'netrunner') {
   const budget = Math.round((9 + (T().budgetRamp ?? 4.5) * (wave - 1)) * (0.75 + 0.25 * diff) * (isBoss ? 0.6 : 1) * tier.count);
   const hpMult = diff * (1 + (T().hpRamp ?? 0.3) * (wave - 1)) * tier.hp;
   const roster = district.roster.filter(e => e.from <= wave);
+  // Budget cost is health-based (60 HP = 1 point) with a small speed premium and a runner premium,
+  // so every wave's total health tracks the budget curve regardless of which types are rolled.
+  // (The hand-set `pts` on enemies is no longer used for budgeting.)
+  const cost = (def) => (def.hp / 60) * (0.75 + 0.25 * def.speed) * (1 + def.armor / 15) * (def.hacker ? 1.3 : 1);
   const groups = [];
   let left = budget; let guard = 0;
   while (left > 0 && guard++ < 30) {
-    const pick = rng.weighted(roster, e => e.weight * (ENEMIES[e.type].hacker ? 0.8 : 1));
+    // Only types that still fit the remaining budget: a last-second mech overshoot used to add +40%.
+    const affordable = roster.filter(e => cost(ENEMIES[e.type]) <= left);
+    if (!affordable.length) break;
+    const pick = rng.weighted(affordable, e => e.weight * (ENEMIES[e.type].hacker ? 0.8 : 1));
     const def = ENEMIES[pick.type];
-    const maxCount = Math.max(1, Math.floor(left / def.pts));
+    const maxCount = Math.max(1, Math.floor(left / cost(def)));
     let count = Math.min(maxCount, rng.int(2, 6));
-    if (def.pts >= 6) count = Math.min(count, 2);
+    if (cost(def) >= 6) count = Math.min(count, 2);
     if (def.hacker) count = Math.min(count, 2 + Math.floor(wave / 4));
     groups.push({ type: pick.type, count, interval: def.speed > 1.5 ? 0.45 : def.pts >= 6 ? 1.3 : 0.75, hpMult });
-    left -= count * def.pts;
+    left -= count * cost(def);
+  }
+  // Normalize: scale group counts so the wave's total health matches what the budget implies
+  // (60 HP per point). Composition still varies with the roll; the health curve does not.
+  // Effective health counts armor (an armored body soaks more tower damage than its HP says).
+  {
+    const eff = (def) => def.hp * (1 + def.armor / 15);
+    const targetHP = budget * 60 * hpMult;
+    const sum = () => groups.reduce((s, g) => s + g.count * eff(ENEMIES[g.type]) * g.hpMult, 0);
+    const actual = sum();
+    if (actual > 0) {
+      const f = targetHP / actual;
+      for (const g of groups) { const def = ENEMIES[g.type]; let c = Math.max(1, Math.round(g.count * f)); if (def.hacker) c = Math.min(c, 2 + Math.floor(wave / 4)); g.count = c; }
+      // Runner caps can leave the wave light: top up the biggest non-runner group.
+      const deficit = targetHP - sum(); const filler = groups.filter(g => !ENEMIES[g.type].hacker).sort((a, b) => b.count - a.count)[0];
+      if (filler && deficit > 0.05 * targetHP) filler.count += Math.round(deficit / (eff(ENEMIES[filler.type]) * filler.hpMult));
+    }
   }
   // Elites: rolled separately from the budget so they are rare but reliable. One per eligible wave at
   // `chance`, guaranteed on wave 9, two on the boss wave at the top tiers.

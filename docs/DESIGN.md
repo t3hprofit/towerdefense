@@ -17,6 +17,13 @@ the CORE. Each leak costs 1 core (5 for a boss). 20 core.
 Waves auto-start: 45s before wave 1, 25s between waves, 30s before a boss. Calling a wave early
 scores 25 per second skipped. The clock keeps running during a breach; opening one adds 10s.
 
+### Wave generator (`src/game/waves.js`)
+Seeded per district + wave. A point budget `(9 + 4.5·(w−1)) × (0.75 + 0.25·difficulty) × tier.count`
+is spent on roster types weighted by the district roster; a type costs `hp/60 × speed premium ×
+armor premium × runner premium`. Group counts are then normalized so the wave's effective health
+(`hp × (1 + armor/15)`, times the wave's HP multiplier) equals `budget × 60 × hpMult`, so the health
+curve is smooth wave to wave whatever is rolled. Bosses and elites are added outside the budget.
+
 ## Economy
 
 - **Eddies (€$)** buy and upgrade towers. Kills pay `reward × 0.6 / (1 + 0.1 × (wave − 1))`,

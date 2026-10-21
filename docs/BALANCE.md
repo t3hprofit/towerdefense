@@ -54,7 +54,9 @@ new players; breach discoverability for non-Cyberpunk players is an open questio
 | `difficulty` per district | `districts.js` | 1.6 / 0.95 / 1.15 / 1.25 / 0.9 / 1.0 | base HP and budget multiplier for regular waves |
 | `startEddies` | `districts.js` | 280 → 540 | opening build |
 | `hpRamp` | `waves.js` | 0.30 | HP growth per wave (wave 10 = 3.7× wave 1) |
-| `budgetRamp` | `waves.js` | 4.5 | enemy-count growth per wave |
+| `budgetRamp` | `waves.js` | 4.5 | budget growth per wave (budget × 60 × hpMult = the wave's effective HP) |
+| enemy cost | `waves.js` | `hp/60 × (0.75+0.25·speed) × (1+armor/15) × (runner 1.3)` | what a type costs the budget; `pts` on enemies is unused |
+| HP normalization | `waves.js` | on | group counts scaled so Σ hp×(1+armor/15) matches the budget; runner caps topped up from the biggest non-runner group |
 | boss curve | `waves.js` | `1.2 + 0.3 × (num − 1)` | independent of district difficulty |
 | ICE share | `waves.js` | 8% + 5%/wave from wave 4, capped `0.22 + 0.06 × (num − 1)` ≤ 0.4 | shielded fraction |
 | `econ` | `game.js` | 0.60 | fraction of listed kill reward paid |
@@ -100,7 +102,13 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
 9. **Smasher was unkillable**: 12000 base × 2.7 boss curve = 32400 HP with 12 HP/s regen behind a
    10% shield; the owner cleared City Center with 15 core and had "barely put a dent" in him when
    he walked into the core. Now 7000 base (18900 at Netrunner), regen 3, and a boss leak is a loss.
-10. **Audio**: weapon SFX were a square-wave chirp every 45 ms. Now a separate quieter bus with
+10. **Wave 7 cliff.** Owner: Blackwall Watson wave 7 "hardest by a mile". It rolled 17 armored
+    Maelstroms: the old point costs gave heavies 70 HP per point and drones 30, so a heavy roll sat
+    30–40% above the curve and the next drone roll fell flat. Enemy cost is now health-based (with
+    speed, armor and runner premiums) and every wave's effective HP is normalized to its budget.
+    Composition still varies; the health curve no longer does. Side effect: roughly 10% less raw
+    HP per district at Netrunner. Re-check with the owner before touching `hpRamp`.
+11. **Audio**: weapon SFX were a square-wave chirp every 45 ms. Now a separate quieter bus with
    longer throttles, plus FULL/LOW/OFF. Tuned without listening; expect another pass.
 
 ## How to tune a specific complaint
