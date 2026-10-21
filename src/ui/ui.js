@@ -19,7 +19,7 @@ export class UI {
   }
   bind(game, onQuit) {
     this.game = game; this.onQuit = onQuit;
-    $('#btn-play').onclick = () => { Audio.init(); Audio.startMusic('menu'); this.showScreen('districts'); };
+    $('#btn-play').onclick = () => { Audio.init(); Audio.startMusic('menu'); Audio.play('jackin'); this.showScreen('districts'); };
     $('#btn-howto').onclick = () => this.showScreen('howto');
     $('#btn-back-howto').onclick = () => this.showScreen('menu');
     $('#btn-back-menu').onclick = () => this.showScreen('menu');

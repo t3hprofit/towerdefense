@@ -37,7 +37,14 @@ class AudioEngine {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     this.ctx = new AC();
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
-    this.ctx.onstatechange = () => { if (this.ctx && this.ctx.state === 'interrupted' && !document.hidden) this.ctx.resume().catch(() => {}); };
+    // iOS can hand back a new context in 'suspended'; resume it inside this same gesture, and start the
+    // music as soon as it actually runs (whichever tap that turns out to be).
+    this.ctx.onstatechange = () => {
+      if (!this.ctx) return;
+      if (this.ctx.state === 'interrupted' && !document.hidden) this.ctx.resume().catch(() => {});
+      if (this.ctx.state === 'running' && this.musicOn && !this.musicTimer && !document.hidden) this.startMusic();
+    };
+    if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
     this.master = this.ctx.createGain(); this.master.gain.value = 0.5; this.master.connect(this.ctx.destination);
     this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = this.sfxOn ? this.sfxLevel * SFX_SCALE : 0; this.sfxGain.connect(this.master);
     // Weapon fire is the repetitive stuff; it gets its own quieter, low-passed bus.
@@ -172,6 +179,13 @@ class AudioEngine {
       case 'boss': [110, 110, 110, 82].forEach((f, i) => { this.tone({ f, type: 'sawtooth', dur: 0.35, vol: 0.3, delay: i * 0.3 }); this.noise({ dur: 0.2, vol: 0.1, hp: 80, lp: 500, delay: i * 0.3 }); }); break;
       case 'blip': this.tone({ f: 1400, type: 'square', dur: 0.05, vol: 0.15 }); break;
       case 'bselect': this.tone({ f: 880, f2: 1320, type: 'square', dur: 0.08, vol: 0.18 }); break;
+      // Jacking in: a rising sweep, a burst of data, three handshake blips and a low thump as the link opens.
+      case 'jackin':
+        this.tone({ f: 120, f2: 960, type: 'sawtooth', dur: 0.35, vol: 0.18 });
+        this.noise({ dur: 0.08, vol: 0.1, hp: 2000, lp: 9000, delay: 0.1 });
+        [1200, 1600, 2400].forEach((f, i) => this.tone({ f, type: 'square', dur: 0.05, vol: 0.1, delay: 0.26 + i * 0.07 }));
+        this.tone({ f: 70, f2: 40, type: 'sine', dur: 0.3, vol: 0.3, delay: 0.3 }); this.noise({ dur: 0.25, vol: 0.1, hp: 80, lp: 700, delay: 0.3 });
+        break;
       case 'daemon': [523, 659, 784, 1047].forEach((f, i) => this.tone({ f, type: 'square', dur: 0.14, vol: 0.18, delay: i * 0.08 })); break;
       case 'fail': [300, 250, 200].forEach((f, i) => this.tone({ f, type: 'sawtooth', dur: 0.2, vol: 0.2, delay: i * 0.15 })); break;
       case 'win': [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone({ f, type: 'square', dur: 0.3, vol: 0.2, delay: i * 0.12 })); break;
