@@ -7,27 +7,29 @@ const MUSIC_LEVEL = 0.35;
 //           fm = { ratio, index, decay } adds a sine modulator on that oscillator's frequency.
 //   filter  lowpass sweeping f0 -> f1 Hz over ft seconds with resonance q (omit for none).
 //   env     amp envelope: attack, decay, sustain level (0 = pluck), release, in seconds.
+//   vib     vibrato: LFO rate Hz, depth in cents, seconds before it reaches full depth.
+//   width   stereo spread 0..1: layers pan alternately left/right (single layers by pitch).
 //   gain    loudness trim so the role volumes in playStep stay comparable across patches.
-//   send    how much goes to the tempo-synced delay.
+//   send / verb   how much goes to the tempo-synced delay / the reverb.
 const PATCHES = {
-  fatbass:  { oscs: [{ type: 'sawtooth' }, { type: 'square', semi: -12, gain: 0.5 }], filter: { f0: 1400, f1: 300, q: 2, ft: 0.25 }, env: { a: 0.005, d: 0.2, s: 0.6, r: 0.05 }, gain: 1 },
-  acidbass: { oscs: [{ type: 'sawtooth' }], filter: { f0: 2600, f1: 220, q: 9, ft: 0.18 }, env: { a: 0.002, d: 0.15, s: 0.5, r: 0.03 }, gain: 1.3 },
-  subbass:  { oscs: [{ type: 'sine' }, { type: 'triangle', gain: 0.6 }, { type: 'sine', semi: 12, gain: 0.15 }], filter: { f0: 700, f1: 300, q: 1, ft: 0.3 }, env: { a: 0.01, d: 0.3, s: 0.8, r: 0.1 }, gain: 0.6 },
-  octbass:  { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 9, gain: 0.7 }, { type: 'square', semi: -12, gain: 0.4 }], filter: { f0: 1800, f1: 500, q: 3, ft: 0.12 }, env: { a: 0.003, d: 0.12, s: 0.5, r: 0.04 }, gain: 0.8 },
-  pwm:      { oscs: [{ type: 'square' }, { type: 'square', detune: 12, gain: 0.7 }], filter: { f0: 2800, f1: 1200, q: 1, ft: 0.2 }, env: { a: 0.01, d: 0.15, s: 0.7, r: 0.06 }, gain: 0.6 },
-  glass:    { oscs: [{ type: 'triangle' }, { type: 'sine', semi: 12, gain: 0.5 }], env: { a: 0.002, d: 0.25, s: 0, r: 0.05 }, gain: 1.8, send: 0.35 },
-  bell:     { oscs: [{ type: 'sine', fm: { ratio: 3.5, index: 1.5, decay: 0.4 } }], env: { a: 0.003, d: 0.6, s: 0, r: 0.1 }, gain: 1.2, send: 0.4 },
-  epiano:   { oscs: [{ type: 'sine', fm: { ratio: 1, index: 1.5, decay: 0.3 } }, { type: 'sine', semi: 12, gain: 0.2 }], env: { a: 0.005, d: 0.4, s: 0.3, r: 0.15 }, gain: 0.8, send: 0.3 },
-  pluck:    { oscs: [{ type: 'triangle' }, { type: 'triangle', semi: 12, gain: 0.4 }], filter: { f0: 5000, f1: 1200, q: 1, ft: 0.3 }, env: { a: 0.003, d: 0.45, s: 0, r: 0.05 }, gain: 2.0, send: 0.3 },
-  supersaw: { oscs: [{ type: 'sawtooth', detune: -12 }, { type: 'sawtooth' }, { type: 'sawtooth', detune: 12 }], filter: { f0: 3500, f1: 1800, q: 1, ft: 0.3 }, env: { a: 0.02, d: 0.2, s: 0.7, r: 0.12 }, gain: 0.55, send: 0.3 },
-  pad:      { oscs: [{ type: 'sawtooth', detune: -8 }, { type: 'sawtooth', detune: 8, gain: 0.8 }, { type: 'square', semi: -12, gain: 0.3 }], filter: { f0: 500, f1: 1400, q: 1, ft: 1.2 }, env: { a: 0.4, d: 0.5, s: 0.8, r: 0.6 }, gain: 0.9 },
-  brass:    { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 6, gain: 0.6 }], filter: { f0: 400, f1: 2600, q: 2, ft: 0.12 }, env: { a: 0.03, d: 0.1, s: 0.8, r: 0.08 }, gain: 0.7, send: 0.25 },
+  fatbass:  { oscs: [{ type: 'sawtooth' }, { type: 'square', semi: -12, gain: 0.5 }], filter: { f0: 900, f1: 250, q: 1.5, ft: 0.25 }, env: { a: 0.008, d: 0.2, s: 0.6, r: 0.08 }, gain: 1.1 },
+  acidbass: { oscs: [{ type: 'sawtooth' }], filter: { f0: 2000, f1: 220, q: 7, ft: 0.2 }, env: { a: 0.003, d: 0.25, s: 0.6, r: 0.08 }, gain: 1.3 },
+  subbass:  { oscs: [{ type: 'sine' }, { type: 'triangle', gain: 0.6 }, { type: 'sine', semi: 12, gain: 0.15 }], filter: { f0: 700, f1: 300, q: 1, ft: 0.3 }, env: { a: 0.01, d: 0.3, s: 0.8, r: 0.12 }, gain: 0.6 },
+  octbass:  { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 9, gain: 0.7 }, { type: 'square', semi: -12, gain: 0.4 }], filter: { f0: 1500, f1: 450, q: 2, ft: 0.12 }, env: { a: 0.004, d: 0.12, s: 0.5, r: 0.06 }, gain: 0.8 },
+  softarp:  { oscs: [{ type: 'triangle' }, { type: 'sawtooth', detune: 8, gain: 0.35 }], filter: { f0: 2200, f1: 900, q: 1, ft: 0.25 }, env: { a: 0.01, d: 0.25, s: 0.4, r: 0.15 }, gain: 1.0, width: 0.4, send: 0.25, verb: 0.3 },
+  glass:    { oscs: [{ type: 'triangle' }, { type: 'sine', semi: 12, gain: 0.5 }], env: { a: 0.004, d: 0.3, s: 0, r: 0.15 }, gain: 1.8, width: 0.5, send: 0.35, verb: 0.4 },
+  bell:     { oscs: [{ type: 'sine', fm: { ratio: 3.5, index: 1.5, decay: 0.4 } }], env: { a: 0.003, d: 0.7, s: 0, r: 0.15 }, gain: 1.2, width: 0.6, send: 0.4, verb: 0.5 },
+  epiano:   { oscs: [{ type: 'sine', fm: { ratio: 1, index: 1.5, decay: 0.3 } }, { type: 'sine', semi: 12, gain: 0.2 }], env: { a: 0.005, d: 0.4, s: 0.3, r: 0.2 }, gain: 0.8, width: 0.4, send: 0.3, verb: 0.35 },
+  pluck:    { oscs: [{ type: 'triangle' }, { type: 'triangle', semi: 12, gain: 0.4 }], filter: { f0: 5000, f1: 1200, q: 1, ft: 0.3 }, env: { a: 0.003, d: 0.45, s: 0, r: 0.08 }, gain: 2.0, width: 0.3, send: 0.3, verb: 0.4 },
+  supersaw: { oscs: [{ type: 'sawtooth', detune: -15 }, { type: 'sawtooth' }, { type: 'sawtooth', detune: 15 }], filter: { f0: 900, f1: 2200, q: 1, ft: 0.4 }, env: { a: 0.04, d: 0.3, s: 0.75, r: 0.25 }, vib: { rate: 5.5, depth: 8, delay: 0.25 }, gain: 0.55, width: 0.5, send: 0.3, verb: 0.35 },
+  pad:      { oscs: [{ type: 'sawtooth', detune: -8 }, { type: 'sawtooth', detune: 8, gain: 0.8 }, { type: 'square', semi: -12, gain: 0.3 }], filter: { f0: 500, f1: 1400, q: 1, ft: 1.2 }, env: { a: 0.4, d: 0.5, s: 0.8, r: 0.6 }, gain: 1.5, width: 0.6, verb: 0.5 },
+  brass:    { oscs: [{ type: 'sawtooth' }, { type: 'sawtooth', detune: 6, gain: 0.6 }], filter: { f0: 400, f1: 2600, q: 2, ft: 0.12 }, env: { a: 0.03, d: 0.1, s: 0.8, r: 0.12 }, vib: { rate: 5, depth: 5, delay: 0.3 }, gain: 0.7, width: 0.3, send: 0.25, verb: 0.25 },
 };
 class AudioEngine {
   constructor() {
     this.ctx = null; this.master = null; this.sfxGain = null; this.musicGain = null;
     this.sfxOn = true; this.sfxLevel = 1; this.musicOn = true; this.weaponGain = null; this.musicTimer = null; this.step = 0; this.nextNoteTime = 0;
-    this.track = 'menu'; this.song = null; this.stepLen = 0.14; this.musicDelay = null;
+    this.track = 'menu'; this.song = null; this.stepLen = 0.14; this.musicDelay = null; this.musicVerb = null;
     this.noiseBuf = null; this.lastPlayed = {};
   }
   init() {
@@ -40,7 +42,18 @@ class AudioEngine {
     this.sfxGain = this.ctx.createGain(); this.sfxGain.gain.value = this.sfxOn ? this.sfxLevel * SFX_SCALE : 0; this.sfxGain.connect(this.master);
     // Weapon fire is the repetitive stuff; it gets its own quieter, low-passed bus.
     this.weaponGain = this.ctx.createGain(); this.weaponGain.gain.value = 0.45; const wlp = this.ctx.createBiquadFilter(); wlp.type = 'lowpass'; wlp.frequency.value = 2600; this.weaponGain.connect(wlp); wlp.connect(this.sfxGain);
-    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? MUSIC_LEVEL : 0; this.musicGain.connect(this.master);
+    // Music bus: voices -> musicGain -> soft compressor -> trim -> master. The toggle and track-switch dip act on musicGain.
+    this.musicGain = this.ctx.createGain(); this.musicGain.gain.value = this.musicOn ? MUSIC_LEVEL : 0;
+    const comp = this.ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 15; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.25;
+    // The compressor adds ~5 dB of makeup gain; trim it back so the music keeps its level against the SFX.
+    const trim = this.ctx.createGain(); trim.gain.value = 0.56;
+    this.musicGain.connect(comp); comp.connect(trim); trim.connect(this.master);
+    // Reverb: a generated 1.8 s decaying-noise impulse through a convolver, darkened, fed by patch `verb` sends.
+    const sr = this.ctx.sampleRate, vlen = Math.floor(sr * 1.8), ir = this.ctx.createBuffer(2, vlen, sr);
+    for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < vlen; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / vlen, 2) * Math.exp(-i / (sr * 0.45)); }
+    this.musicVerb = this.ctx.createConvolver(); this.musicVerb.buffer = ir;
+    const vlp = this.ctx.createBiquadFilter(); vlp.type = 'lowpass'; vlp.frequency.value = 3500; const vg = this.ctx.createGain(); vg.gain.value = 0.6;
+    this.musicVerb.connect(vlp); vlp.connect(vg); vg.connect(this.musicGain);
     // Tempo-synced feedback delay the music patches send to (delayTime is set per song).
     this.musicDelay = this.ctx.createDelay(1); this.musicDelay.delayTime.value = 0.3;
     const dfb = this.ctx.createGain(); dfb.gain.value = 0.3; const dlp = this.ctx.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 2200;
@@ -97,32 +110,43 @@ class AudioEngine {
       fl.frequency.setValueAtTime(p.filter.f0, t); fl.frequency.exponentialRampToValueAtTime(p.filter.f1, t + p.filter.ft);
       fl.connect(out); input = fl;
     }
-    for (const o of p.oscs) {
+    let lfo = null;
+    if (p.vib) {
+      const o = ctx.createOscillator(); o.frequency.value = p.vib.rate; lfo = ctx.createGain();
+      lfo.gain.setValueAtTime(0, t); lfo.gain.linearRampToValueAtTime(p.vib.depth, t + p.vib.delay);
+      o.connect(lfo); o.start(t); o.stop(tEnd + 0.02);
+    }
+    const canPan = p.width && ctx.createStereoPanner;
+    p.oscs.forEach((o, i) => {
       const osc = ctx.createOscillator(); osc.type = o.type; const of = f * Math.pow(2, (o.semi || 0) / 12);
-      osc.frequency.value = of; if (o.detune) osc.detune.value = o.detune;
+      osc.frequency.value = of; if (o.detune) osc.detune.value = o.detune; if (lfo) lfo.connect(osc.detune);
       if (o.fm) {
         const mod = ctx.createOscillator(); mod.frequency.value = of * o.fm.ratio; const mg = ctx.createGain();
         mg.gain.setValueAtTime(of * o.fm.index, t); mg.gain.exponentialRampToValueAtTime(of * o.fm.index * 0.02, t + o.fm.decay);
         mod.connect(mg); mg.connect(osc.frequency); mod.start(t); mod.stop(tEnd + 0.02);
       }
-      if (o.gain !== undefined && o.gain !== 1) { const og = ctx.createGain(); og.gain.value = o.gain; osc.connect(og); og.connect(input); } else osc.connect(input);
+      let node = osc;
+      if (o.gain !== undefined && o.gain !== 1) { const og = ctx.createGain(); og.gain.value = o.gain; osc.connect(og); node = og; }
+      if (canPan) { const pan = ctx.createStereoPanner(); pan.pan.value = p.width * (p.oscs.length > 1 ? (i % 2 ? 1 : -1) : Math.sin(f)); node.connect(pan); node = pan; }
+      node.connect(input);
       osc.start(t); osc.stop(tEnd + 0.02);
-    }
+    });
     out.connect(dest);
     if (p.send && this.musicDelay) { const sg = ctx.createGain(); sg.gain.value = p.send; out.connect(sg); sg.connect(this.musicDelay); }
+    if (p.verb && this.musicVerb) { const vg = ctx.createGain(); vg.gain.value = p.verb; out.connect(vg); vg.connect(this.musicVerb); }
   }
   // Schedule one sequencer step (bass, arp, lead, drum) of the current song at time t.
   playStep(ev, t) {
     const song = this.song, v = song.voices, stepLen = this.stepLen, m = this.musicGain;
     const hz = semi => song.root * Math.pow(2, semi / 12);
     if (ev.bass) this.voice(v.bass, hz(ev.bass.semi), t, stepLen * ev.bass.len * 0.8, 0.2, m);
-    if (ev.arp !== null) this.voice(v.arp, hz(ev.arp), t, stepLen * 0.8, 0.09, m);
-    if (ev.lead) this.voice(v.lead, hz(ev.lead.semi), t, stepLen * ev.lead.len * 0.9, 0.18, m);
+    if (ev.arp !== null) this.voice(v.arp, hz(ev.arp), t, stepLen * 0.8, 0.12, m);
+    if (ev.lead) this.voice(v.lead, hz(ev.lead.semi), t, stepLen * ev.lead.len * 0.9, 0.25, m);
     const d = ev.drum;
     if (d === 'k' || d === 'K') { this.tone({ f: 160, f2: 45, type: 'sine', dur: 0.2, vol: 0.45, dest: m, at: t }); this.noise({ dur: 0.012, vol: 0.12, hp: 1500, lp: 6000, dest: m, at: t }); }
-    if (d === 's' || d === 'S') { this.noise({ dur: 0.12, vol: 0.18, hp: 900, lp: 7000, dest: m, at: t }); this.tone({ f: 200, f2: 120, type: 'triangle', dur: 0.08, vol: 0.2, dest: m, at: t }); }
-    if (d === 'h' || d === 'K' || d === 'S') this.noise({ dur: 0.035, vol: 0.07, hp: 7000, lp: 12000, dest: m, at: t });
-    if (d === 'o') this.noise({ dur: 0.14, vol: 0.06, hp: 6000, lp: 12000, dest: m, at: t });
+    if (d === 's' || d === 'S') { this.noise({ dur: 0.12, vol: 0.16, hp: 900, lp: 6000, dest: m, at: t }); this.tone({ f: 190, f2: 120, type: 'triangle', dur: 0.09, vol: 0.2, dest: m, at: t }); this.noise({ dur: 0.1, vol: 0.08, hp: 900, lp: 5000, dest: this.musicVerb, at: t }); }
+    if (d === 'h' || d === 'K' || d === 'S') this.noise({ dur: 0.045, vol: 0.05, hp: 8000, lp: 11000, dest: m, at: t });
+    if (d === 'o') this.noise({ dur: 0.16, vol: 0.045, hp: 6500, lp: 11000, dest: m, at: t });
   }
 
   play(name) {

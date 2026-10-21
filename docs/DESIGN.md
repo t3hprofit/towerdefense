@@ -135,8 +135,10 @@ shield break) on the main bus. SFX has FULL / LOW / OFF. Music is a step sequenc
 songs in `src/data/music.js`: one per district plus a drumless `menu` title theme, each a 4-bar intro
 and verse / lead / bridge / chorus sections in a looped order (65–95 s before it repeats). Bass,
 arp and lead are patches from the `PATCHES` table in `audio.js` (layered oscillators through a
-swept lowpass with an ADSR, FM for the bell and e-piano, a tempo-synced delay send); each song
-names its own three. Kick, snare and hats are a sine sweep and filtered noise. The UI
+swept lowpass with an ADSR, FM for the bell and e-piano, vibrato and stereo width on leads and
+pads, sends to a tempo-synced delay and a generated convolution reverb); each song names its own
+three. The music bus runs through a soft compressor, trimmed back so its level against the SFX
+is unchanged. Kick, snare and hats are a sine sweep and filtered noise. The UI
 picks the track: `menu` from the first tap anywhere (browsers allow no sound before a gesture)
 and again on quit, the district id when a district card is tapped.
 

@@ -61,7 +61,7 @@ export const SONGS = {
   },
   // Watson: the original A minor loop, grown into a full tune.
   watson: {
-    bpm: 107, root: 55, voices: { bass: 'fatbass', arp: 'pwm', lead: 'supersaw' },
+    bpm: 107, root: 55, voices: { bass: 'fatbass', arp: 'softarp', lead: 'supersaw' },
     sections: WATSON_SECTIONS,
     order: ['I', 'A', 'B', 'A', 'B', 'C', 'D', 'D', 'B'], loopFrom: 1,
   },
@@ -111,20 +111,20 @@ export const SONGS = {
   },
   // Santo Domingo: industrial techno, C minor, straight eighths and short stabs.
   santo: {
-    bpm: 128, root: 65.41, voices: { bass: 'acidbass', arp: 'pwm', lead: 'brass' },
+    bpm: 128, root: 65.41, voices: { bass: 'acidbass', arp: 'softarp', lead: 'brass' },
     sections: {
       I: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [-2, 'M'], [-2, 'M']],
-        bass: '1.1.1.1.1.1.1.1.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: null },
+        bass: '1_..1_..1_..1_8.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: null },
       A: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M']],
-        bass: '1.1.1.1.1.1.1.8.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: 'K.h.S.h.K.h.S.h.' },
+        bass: '1_.1_.1_..1_.8_.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: 'K.h.S.h.K.h.S.h.' },
       B: { chords: [[0, 'm'], [0, 'm'], [0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M']],
-        bass: '1.1.1.1.1.1.1.8.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: 'K.h.S.h.K.h.S.hh',
-        lead: '12:1 .:3 12:1 .:3 15:1 .:3 12:1 .:1 10:1 .:1  12:1 .:3 12:1 .:3 15:1 .:3 17:1 .:1 15:1 .:1  8:1 .:3 8:1 .:3 12:1 .:3 15:1 .:3  10:1 .:3 10:1 .:3 14:1 .:3 17:1 .:1 14:1 .:1' },
+        bass: '1_.1_.1_..1_.8_.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: 'K.h.S.h.K.h.S.hh',
+        lead: '12:2 .:2 12:2 .:2 15:2 .:2 12:2 10:2  12:2 .:2 12:2 .:2 15:2 .:2 17:2 15:2  8:2 .:2 8:2 .:2 12:2 .:2 15:2 .:2  10:2 .:2 10:2 .:2 14:2 .:2 17:2 14:2' },
       C: { chords: [[5, 'm'], [5, 'm'], [5, 'm'], [5, 'm'], [-5, 'M'], [-5, 'M'], [-5, 'M'], [-5, 'M']],
-        bass: '1.1.1.1.1.1.1111', arp: [0, 2, 3, 2], drums: 'K.hhS.h.K.hhS.hh',
+        bass: '1_.1_.1_..1_1_8_', arp: [0, 2, 3, 2], drums: 'K.hhS.h.K.hhS.hh',
         lead: '17:2 20:2 24:4 20:2 17:2 15:4  17:2 20:2 24:4 20:2 17:2 12:4  19:2 23:2 26:4 23:2 19:2 14:4  19:4 .:4 23:4 26:4' },
       D: { chords: [[0, 'm'], [0, 'm'], [-4, 'M'], [-4, 'M'], [-2, 'M'], [-2, 'M'], [-5, 'M'], [-5, 'M']],
-        bass: '1.1.1.1.1.1.1.8.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: 'K.h.S.hhK.h.S.ho',
+        bass: '1_.1_.1_..1_.8_.', arp: [0, 3, 0, 3, 2, 3, 0, 2], drums: 'K.h.S.hhK.h.S.ho',
         lead: '12:4 15:2 17:2 19:4 17:2 15:2  12:4 15:2 17:2 20:4 17:2 15:2  14:4 17:2 19:2 22:4 19:2 17:2  19:4 .:2 19:2 23:4 26:4' },
     },
     order: ['I', 'A', 'A', 'B', 'B', 'C', 'D', 'D', 'B'], loopFrom: 1,
