@@ -10,8 +10,12 @@ import { Breach, daemonPoolFor } from './breach.js';
 import { makeRng, hashStr } from '../core/rng.js';
 import { Audio } from '../core/audio.js';
 import { Save } from '../core/save.js';
+import { Session } from '../core/session.js';
 
 const RAM_BASE = 12, RAM_REGEN = 0.45;
+// Scoring
+const COMBO_WINDOW = 1.5, COMBO_CAP = 25, MULT_CAP = 3.5, BOSS_KILL_BONUS = 5000;
+const SCORE_KILL = 10, SCORE_WAVE = 500, SCORE_CLEAN_WAVE = 250, SCORE_DAEMON = 300, SCORE_AP = 100, SCORE_PURGE = 50, SCORE_LIFE = 200;
 
 export class Game {
   constructor(ui) {
@@ -39,6 +43,8 @@ export class Game {
     this.shake = 0; this.flash = 0;
     this.stats = { kills: 0, hacks: 0, breaches: 0, daemons: 0, built: 0, leaks: 0, purges: 0, apHacks: 0 };
     this.nextWave = generateWave(district, 1);
+    this.lastKillT = -Infinity; this.waveLeaked = false;
+    Session.beginRun(district.id);
     this.hintsShown = new Set();
     this.ui.onDistrictStart();
     this.hint('build', 'Tap a tower below, then tap an empty cell to build.');
@@ -138,7 +144,7 @@ export class Game {
   purge(t) {
     const qh = QUICKHACKS.purge;
     if (this.ram < qh.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
-    this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; this.stats.purges++;
+    this.ram -= qh.cost; t.offline = 0; t.hackProgress = 0; this.stats.purges++; Session.add(SCORE_PURGE);
     for (const e of this.enemies) if (e.hacks) e.hacks = e.hacks.filter(h => h.tower !== t);
     Audio.play('purge'); this.burst(t.x, t.y, '#b14cff', 16, 2.4); this.text(t.x, t.y, 'PURGED', '#b14cff');
     this.ui.closePanel(); this.ui.refreshTrays();
@@ -165,7 +171,7 @@ export class Game {
   jackIn(ap) {
     if (ap.cooldown > 0) { this.ui.toast('Access point rebooting', 'warn'); return; }
     if (this.ram < ap.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
-    this.ram -= ap.cost; this.stats.apHacks++;
+    this.ram -= ap.cost; this.stats.apHacks++; Session.add(SCORE_AP);
     const x = ap.c + 0.5, y = ap.r + 0.5;
     switch (ap.type) {
       case 'TRAP': {
@@ -202,7 +208,7 @@ export class Game {
     if (done.length) Audio.play('daemon'); else Audio.play('fail');
   }
   applyDaemon(id) {
-    this.stats.daemons++; if (DAEMONS[id].once) this.uploadedOnce.add(id);
+    this.stats.daemons++; Session.add(SCORE_DAEMON); if (DAEMONS[id].once) this.uploadedOnce.add(id);
     switch (id) {
       case 'datamine1': this.eddies += 150; break;
       case 'datamine2': this.eddies += 400; break;
@@ -220,7 +226,7 @@ export class Game {
   // ---------------- Waves ----------------
   startWave() {
     if (this.state !== 'play' || this.waveActive || this.wave >= this.district.waves) return;
-    this.wave++; this.waveActive = true; this.waveTime = 0; this.breachAvailable = false;
+    this.wave++; this.waveActive = true; this.waveTime = 0; this.waveLeaked = false; this.breachAvailable = false;
     const w = this.nextWave; this.spawnList = scheduleWave(w); this.currentWave = w;
     this.selectedTower = null; this.ui.closePanel();
     Audio.play(w.boss ? 'boss' : 'wave');
@@ -230,6 +236,7 @@ export class Game {
   endWave() {
     this.waveActive = false;
     const bonus = this.currentWave.bonus; this.eddies += bonus;
+    Session.add(SCORE_WAVE * this.wave + (this.waveLeaked ? 0 : SCORE_CLEAN_WAVE));
     this.ui.toast(`WAVE ${this.wave} CLEARED · +€$${bonus}`, 'good');
     if (this.fx.massvuln > 0) this.fx.massvuln--; if (this.fx.blackwall > 0) this.fx.blackwall--;
     if (this.fx.overclock > 0) this.fx.overclock--; if (this.fx.bounty > 0) this.fx.bounty--;
@@ -254,9 +261,13 @@ export class Game {
     this.state = 'result';
     const stars = won ? (this.lives >= 15 ? 3 : this.lives >= 8 ? 2 : 1) : 0;
     const idx = DISTRICTS.indexOf(this.district); const next = DISTRICTS[idx + 1];
-    Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null });
+    if (won) Session.add(this.lives * SCORE_LIFE);
+    Session.endRun({ won });
+    const score = Session.state.runScore; const prevBest = Save.district(this.district.id).bestScore || 0;
+    Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score });
+    const extra = { score, best: Math.max(prevBest, score), newBest: score > prevBest, total: Session.state.sessionScore, bestCombo: Session.state.bestCombo };
     Audio.play(won ? 'win' : 'lose');
-    this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives });
+    this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives, ...extra });
   }
 
   // ---------------- Simulation ----------------
@@ -272,6 +283,8 @@ export class Game {
     // RAM regen
     let regen = RAM_REGEN; for (const t of this.towers) if (t.type === 'deck' && t.offline <= 0) regen += t.stats.ram;
     this.ram = Math.min(this.ramMax, this.ram + regen * dt);
+    // Combo decays when no kill lands within the window
+    if (Session.state.combo > 0 && this.time - this.lastKillT > COMBO_WINDOW) Session.state.combo = 0;
     // Spawning
     if (this.waveActive) {
       this.waveTime += dt;
@@ -360,6 +373,7 @@ export class Game {
   leak(e) {
     e.dead = true; const dmg = e.boss ? 5 : 1; this.lives = Math.max(0, this.lives - dmg); this.stats.leaks++;
     this.shake = Math.max(this.shake, 0.4); this.flash = 0.35; Audio.play('leak');
+    this.waveLeaked = true; Session.state.combo = 0; this.lastKillT = -Infinity;
     this.ui.toast(`${e.name} breached the core! -${dmg}`, 'warn');
     for (const hk of e.hacks) { hk.tower.hackers = Math.max(0, hk.tower.hackers - 1); hk.tower.hackProgress = 0; }
   }
@@ -376,11 +390,23 @@ export class Game {
     e.dead = true;
     let reward = e.reward; if (this.fx.bounty > 0) reward = Math.round(reward * 1.6);
     this.eddies += reward; this.stats.kills++;
+    this.scoreKill(e);
     this.text(e.x, e.y - 0.3, `+${reward}`, '#fcee0a', e.boss ? 1.6 : 1);
     this.burst(e.x, e.y, e.color, e.boss ? 60 : 10, e.boss ? 5 : 2.2);
     if (e.boss) { this.shake = 0.9; this.ring(e.x, e.y, 2.5, e.color); Audio.play('boom'); this.ui.toast(`${e.name} NEUTRALIZED`, 'good', 3000); } else Audio.play('kill');
     for (const hk of e.hacks) { hk.tower.hackers = Math.max(0, hk.tower.hackers - 1); hk.tower.hackProgress = 0; }
     for (const t of this.towers) if (t.lastTargetId === e.id) t.kills++;
+  }
+  // Score multiplier from the current combo: x1.0 up to x3.5.
+  comboMult(combo = Session.state.combo) { return Math.min(MULT_CAP, 1 + Math.floor(combo / 5) * 0.5); }
+  scoreKill(e) {
+    const S = Session.state;
+    const prevTier = Math.floor(S.combo / 5);
+    S.combo = this.time - this.lastKillT <= COMBO_WINDOW ? Math.min(COMBO_CAP, S.combo + 1) : 0;
+    this.lastKillT = this.time; if (S.combo > S.bestCombo) S.bestCombo = S.combo;
+    const mult = this.comboMult();
+    Session.add(e.reward * SCORE_KILL * mult + (e.boss ? BOSS_KILL_BONUS : 0));
+    if (Math.floor(S.combo / 5) > prevTier) this.text(e.x, e.y - 0.9, `COMBO x${mult.toFixed(1)}`, '#ff2a6d', 1.2);
   }
   firstInRange(x, y, range, exclude = null) {
     let best = null, bd = -1;

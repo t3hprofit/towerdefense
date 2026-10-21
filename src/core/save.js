@@ -18,10 +18,10 @@ export const Save = {
   },
   save() { try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* private mode */ } },
   reset() { this.data = clone(DEFAULT); this.save(); },
-  district(id) { return this.data.districts[id] || { stars: 0, bestWave: 0, won: false, plays: 0 }; },
-  recordResult(id, { won, wave, stars, nextId }) {
+  district(id) { return this.data.districts[id] || { stars: 0, bestWave: 0, won: false, plays: 0, bestScore: 0 }; },
+  recordResult(id, { won, wave, stars, nextId, score = 0 }) {
     const cur = this.district(id);
-    const rec = { stars: Math.max(cur.stars, won ? stars : 0), bestWave: Math.max(cur.bestWave, wave), won: cur.won || won, plays: cur.plays + 1 };
+    const rec = { stars: Math.max(cur.stars, won ? stars : 0), bestWave: Math.max(cur.bestWave, wave), won: cur.won || won, plays: cur.plays + 1, bestScore: Math.max(cur.bestScore || 0, score || 0) };
     this.data.districts[id] = rec;
     if (won && nextId && !this.data.unlocked.includes(nextId)) this.data.unlocked.push(nextId);
     this.save();

@@ -64,3 +64,11 @@ manifest.webmanifest  PWA manifest
 ```
 
 Everything is plain ES modules. No dependencies, no bundler.
+
+## Testing
+
+Three scripts live in `tools/`. Run them from the repo root.
+
+- **Map and wave validation:** `node tools/validate.mjs` checks every district's routes, blocked cells, access points and rosters, then prints the wave compositions. It ends with `VALIDATION OK` or `VALIDATION FAILED`.
+- **Balance simulator:** `node tools/sim.mjs hacker` plays every district with a simple bot and prints the outcome, stars and lives after each wave. Use `basic` instead for a bot that builds and upgrades towers only, without quickhacks or access points. The optional second argument is a district id to run just that district, e.g. `node tools/sim.mjs basic watson`.
+- **Browser smoke test:** start a server with `npx http-server -p 8080 -s .`, then in another shell run `NODE_PATH=/opt/node-tools/node_modules node tools/smoke.mjs`. It plays through the menu, a wave, a quickhack, a breach and an access point, and ends with `ERRORS: none` when the page throws nothing. Screenshots are written to `tools/shots/`. Set `BASE_URL` to test a server other than `http://localhost:8080`, and `SHOT_DIR` to save screenshots somewhere else. Playwright and Chromium must be installed (see the header of `tools/smoke.mjs`).

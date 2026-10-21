@@ -1,8 +1,8 @@
 // Offline-first service worker: precache the whole game, serve from cache, refresh in background.
-const CACHE = 'ncb-v1';
+const CACHE = 'ncb-v2';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
-  './src/main.js', './src/config/tokens.js', './src/core/rng.js', './src/core/save.js', './src/core/audio.js',
+  './src/main.js', './src/config/tokens.js', './src/core/rng.js', './src/core/save.js', './src/core/session.js', './src/core/audio.js',
   './src/data/towers.js', './src/data/enemies.js', './src/data/quickhacks.js', './src/data/daemons.js', './src/data/districts.js',
   './src/game/path.js', './src/game/waves.js', './src/game/breach.js', './src/game/game.js',
   './src/render/renderer.js', './src/ui/ui.js',

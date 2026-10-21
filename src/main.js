@@ -3,8 +3,10 @@ import { Renderer } from './render/renderer.js';
 import { UI } from './ui/ui.js';
 import { Save } from './core/save.js';
 import { Audio } from './core/audio.js';
+import { Session } from './core/session.js';
 
 Save.load();
+Session.load();
 const ui = new UI();
 const game = new Game(ui);
 const canvas = document.getElementById('game');
@@ -69,4 +71,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
 // Expose for debugging / automated tests
-window.__ncb = { game, ui, renderer, Save, Audio };
+window.__ncb = { game, ui, renderer, Save, Audio, Session };

@@ -4,8 +4,11 @@ import { DISTRICTS } from '../data/districts.js';
 import { ENEMIES } from '../data/enemies.js';
 import { Save } from '../core/save.js';
 import { Audio } from '../core/audio.js';
+import { Session } from '../core/session.js';
 
 const $ = (s) => document.querySelector(s);
+const fmtScore = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : String(n);
+const fmtNum = (n) => Number(n).toLocaleString('en-US');
 
 export class UI {
   constructor() {
@@ -52,7 +55,7 @@ export class UI {
       const unlocked = Save.isUnlocked(d.id); const rec = Save.district(d.id);
       const card = document.createElement('button'); card.className = 'dcard' + (unlocked ? '' : ' locked'); card.style.setProperty('--c', d.color);
       const stars = [1, 2, 3].map(i => `<span class="${rec.stars >= i ? '' : 'off'}">★</span>`).join('');
-      card.innerHTML = `<div class="num">${String(d.num).padStart(2, '0')}</div><div class="info"><div class="nm">${d.name}</div><div class="sub">${d.sub}${rec.bestWave ? ` · best wave ${rec.bestWave}` : ''}</div><div class="desc">${d.desc}</div></div><div class="stars">${stars}</div>`;
+      card.innerHTML = `<div class="num">${String(d.num).padStart(2, '0')}</div><div class="info"><div class="nm">${d.name}</div><div class="sub">${d.sub}${rec.bestWave ? ` · best wave ${rec.bestWave}` : ''}${rec.bestScore ? ` · <span class="bs">best score ${rec.bestScore.toLocaleString('en-US')}</span>` : ''}</div><div class="desc">${d.desc}</div></div><div class="stars">${stars}</div>`;
       if (unlocked) card.onclick = () => { Audio.init(); Audio.startMusic(); Audio.play('bselect'); this.hideScreens(); this.game.startDistrict(d); };
       list.appendChild(card);
     }
@@ -102,6 +105,12 @@ export class UI {
     const g = this.game; if (!g.district) return;
     const set = (k, v) => { if (this.lastHud[k] !== v) { this.lastHud[k] = v; const el = this.els.top.querySelector(`[data-v="${k}"]`); if (el) el.textContent = v; } };
     set('eddies', Math.floor(g.eddies)); set('lives', g.lives); set('wave', `${g.wave}/${g.district.waves}`);
+    set('score', fmtScore(Session.state.runScore));
+    const cm = g.comboMult(); const comboTxt = cm > 1 ? 'x' + cm.toFixed(1) : '';
+    if (this.lastHud.combo !== comboTxt) {
+      this.lastHud.combo = comboTxt; const cb = $('#combo-badge'); cb.textContent = comboTxt; cb.classList.toggle('on', !!comboTxt);
+      cb.classList.remove('pulse'); if (comboTxt) { void cb.offsetWidth; cb.classList.add('pulse'); }
+    }
     const ramTxt = `${Math.floor(g.ram)}/${g.ramMax}`; set('ram', ramTxt);
     const pct = Math.round(g.ram / g.ramMax * 100); if (this.lastHud.pct !== pct) { this.lastHud.pct = pct; this.els.top.querySelector('[data-v="ramfill"]').style.width = pct + '%'; }
     $('#stat-lives').classList.toggle('low', g.lives <= 5);
@@ -193,13 +202,13 @@ export class UI {
   }
 
   // ---------- Results ----------
-  showResult({ won, stars, next, stats, wave, lives }) {
+  showResult({ won, stars, next, stats, wave, lives, score = 0, best = 0, newBest = false, total = 0, bestCombo = 0 }) {
     const g = this.game; const el = this.screens.result; el.classList.remove('hidden'); this.closePanel();
     const starHtml = [1, 2, 3].map(i => `<span class="${stars >= i ? '' : 'off'}">★</span>`).join('');
     el.innerHTML = `<div class="result ${won ? 'win' : 'lose'}"><h1>${won ? 'DISTRICT SECURED' : 'CORE BREACHED'}</h1>
       <div style="color:var(--dim);letter-spacing:0.2em">${g.district.name} · ${won ? 'WAVE ' + wave + ' COMPLETE' : 'FELL ON WAVE ' + wave}</div>
       <div class="bigstars">${starHtml}</div>
-      <div class="rstats"><span>KILLS</span><span>${stats.kills}</span><span>CORE LEFT</span><span>${lives}/20</span><span>TOWERS BUILT</span><span>${stats.built}</span><span>QUICKHACKS</span><span>${stats.hacks}</span><span>DAEMONS</span><span>${stats.daemons}</span><span>PURGES</span><span>${stats.purges}</span><span>ACCESS POINTS</span><span>${stats.apHacks}</span><span>LEAKS</span><span>${stats.leaks}</span></div>
+      <div class="rstats"><span>SCORE</span><span class="sc">${fmtNum(score)}</span><span>BEST</span><span>${fmtNum(best)}${newBest ? '<em class="nb">NEW BEST</em>' : ''}</span><span>SESSION TOTAL</span><span>${fmtNum(total)}</span><span>BEST COMBO</span><span>${bestCombo}</span><span>KILLS</span><span>${stats.kills}</span><span>CORE LEFT</span><span>${lives}/20</span><span>TOWERS BUILT</span><span>${stats.built}</span><span>QUICKHACKS</span><span>${stats.hacks}</span><span>DAEMONS</span><span>${stats.daemons}</span><span>PURGES</span><span>${stats.purges}</span><span>ACCESS POINTS</span><span>${stats.apHacks}</span><span>LEAKS</span><span>${stats.leaks}</span></div>
       ${won && next ? `<div style="color:var(--green)">UNLOCKED: ${next.name}</div>` : ''}
       <div class="menu-btns">${won && next ? `<button class="btn primary" id="r-next">NEXT: ${next.name}</button>` : ''}<button class="btn ${won ? '' : 'primary'}" id="r-retry">${won ? 'REPLAY' : 'RETRY'}</button><button class="btn" id="r-quit">DISTRICTS</button></div></div>`;
     const nx = el.querySelector('#r-next'); if (nx) nx.onclick = () => { el.classList.add('hidden'); g.startDistrict(next); };
