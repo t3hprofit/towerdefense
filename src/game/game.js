@@ -246,7 +246,8 @@ export class Game {
   // ---------------- Waves ----------------
   startWave() {
     if (this.state !== 'play' || this.paused || this.waveActive || this.wave >= this.district.waves) return;
-    if (this.waveTimer !== null && this.waveTimer > 1) { const early = Math.round(this.waveTimer * SCORE_EARLY); this.addScore(early); this.ui.toast(`EARLY CALL +${early} score`, 'good'); }
+    // No bonus for skipping the opening build clock: wave 1 is the only wave nothing has to be survived for.
+    if (this.wave > 0 && this.waveTimer !== null && this.waveTimer > 1) { const early = Math.round(this.waveTimer * SCORE_EARLY); this.addScore(early); this.ui.toast(`EARLY CALL +${early} score`, 'good'); }
     this.beginWave();
   }
   beginWave() {

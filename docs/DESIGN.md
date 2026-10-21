@@ -17,7 +17,8 @@ the CORE. Each leak costs 1 core (5 for a boss). 20 core.
 
 ### Wave clock
 Waves auto-start: 45s before wave 1, 25s between waves, 30s before a boss. Calling a wave early
-scores 25 per second skipped. The clock keeps running during a breach; opening one adds 10s.
+scores 25 per second skipped, except before wave 1 (the opening clock is build time, not a bonus).
+The clock keeps running during a breach; opening one adds 10s.
 
 ### Wave generator (`src/game/waves.js`)
 Seeded per district + wave. A point budget `(9 + 4.5·(w−1)) × (0.75 + 0.25·difficulty) × tier.count`
