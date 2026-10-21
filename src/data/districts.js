@@ -52,7 +52,7 @@ export const DISTRICTS = [
     accessPoints: [
       { id: 'door', type: 'DOOR', c: 4, r: 4, name: 'BLAST DOOR', duration: 4.5, cost: 3, cooldown: 22 },
       { id: 'trap', type: 'TRAP', c: 4, r: 6, name: 'GAS MAIN', radius: 2.2, dmg: 220, cost: 5, cooldown: 28 },
-      { id: 'turret', type: 'TURRET', c: 8, r: 9, name: 'NCPD TURRET', duration: 20, dmg: 26, rate: 4, range: 3.0, cost: 5, cooldown: 40 },
+      { id: 'turret', type: 'TURRET', c: 4, r: 8, name: 'NCPD TURRET', duration: 20, dmg: 26, rate: 4, range: 3.0, cost: 5, cooldown: 40 },
     ],
     roster: [
       { type: 'valentino', from: 1, weight: 5 }, { type: 'sixer', from: 3, weight: 2.5 },
@@ -72,7 +72,7 @@ export const DISTRICTS = [
     accessPoints: [
       { id: 'trap', type: 'TRAP', c: 6, r: 10, name: 'COOLANT TANK', radius: 2.2, dmg: 300, cost: 5, cooldown: 26 },
       { id: 'door', type: 'DOOR', c: 8, r: 11, name: 'LOADING GATE', duration: 5, cost: 3, cooldown: 22 },
-      { id: 'turret', type: 'TURRET', c: 1, r: 11, name: 'MILITECH TURRET', duration: 22, dmg: 34, rate: 4, range: 3.2, cost: 5, cooldown: 40 },
+      { id: 'turret', type: 'TURRET', c: 6, r: 11, name: 'MILITECH TURRET', duration: 22, dmg: 34, rate: 4, range: 3.2, cost: 5, cooldown: 40 },
     ],
     roster: [
       { type: 'scav', from: 1, weight: 3 }, { type: 'drone', from: 1, weight: 3 }, { type: 'mech', from: 3, weight: 1.6 },
@@ -112,7 +112,7 @@ export const DISTRICTS = [
     accessPoints: [
       { id: 'trap', type: 'TRAP', c: 2, r: 9, name: 'POWER RELAY', radius: 2.4, dmg: 450, cost: 5, cooldown: 26 },
       { id: 'door', type: 'DOOR', c: 1, r: 9, name: 'SECURITY DOOR', duration: 5, cost: 3, cooldown: 22 },
-      { id: 'turret', type: 'TURRET', c: 7, r: 9, name: 'ARASAKA TURRET', duration: 24, dmg: 48, rate: 4.5, range: 3.4, cost: 5, cooldown: 40 },
+      { id: 'turret', type: 'TURRET', c: 3, r: 8, name: 'ARASAKA TURRET', duration: 24, dmg: 48, rate: 4.5, range: 3.4, cost: 5, cooldown: 40 },
     ],
     roster: [
       { type: 'trooper', from: 1, weight: 4 }, { type: 'akrunner', from: 2, weight: 2 }, { type: 'mech', from: 3, weight: 1.6 },
