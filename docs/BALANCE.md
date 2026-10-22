@@ -31,7 +31,7 @@ Current readings (`hpRamp` 0.38, boss rule on, so the bot loses every Netrunner 
 | Tier | Watson | Westbrook | Heywood | Santo | Pacifica | Center |
 |---|---|---|---|---|---|---|
 | Street (hacker) | 20 ★★★ | 20 ★★★ | 20 ★★★ | 20 ★★★ | 20 (boss) | 20 (boss) |
-| Netrunner (hacker) | 12 | 10 | 20 | 20 | 15 | 20 |
+| Netrunner (hacker) | 12 | 10 | 20 | 20 | 9 | 20 |
 | Legend (hacker) | wave 4 | wave 6 | wave 9 | wave 9 | wave 9 | wave 9 |
 
 (numbers are core left on wave 9 for Netrunner, the wave the bot fell on for Legend)
@@ -54,8 +54,8 @@ new players; breach discoverability for non-Cyberpunk players is an open questio
 
 | Knob | Where | Current | Effect |
 |---|---|---|---|
-| `difficulty` per district | `districts.js` | 1.6 / 0.95 / 1.15 / 1.25 / 0.9 / 1.0 | base HP and budget multiplier for regular waves |
-| `startEddies` | `districts.js` | 280 → 540 | opening build |
+| `difficulty` per district | `districts.js` | 1.6 / 0.95 / 1.15 / 1.25 / 1.0 / 1.0 | base HP and budget multiplier for regular waves |
+| `startEddies` | `districts.js` | 280 / 340 / 380 / 420 / 380 / 540 | opening build |
 | `hpRamp` | `waves.js` | 0.38 | HP growth per wave (wave 10 = 4.4× wave 1) |
 | `budgetRamp` | `waves.js` | 4.5 | budget growth per wave (budget × 60 × hpMult = the wave's effective HP) |
 | enemy cost | `waves.js` | `hp/60 × (0.75+0.25·speed) × (1+armor/15) × (runner 1.3)` | what a type costs the budget; `pts` on enemies is unused |
@@ -121,6 +121,14 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
     `diffScale`/`budgetRamp` (a bigger budget is *easier* for the bot: more bodies, more eddies).
     `hpRamp` 0.38 lands Watson 12 / Westbrook 10 at wave 9, leaves the Deck maps at 20, keeps Street
     Kid a clean 3-star and Legend a wipe. Bosses have their own curve and are untouched.
+13. **Pacifica waves 1–8 "a joke", 9 and 10 "went off".** Owner on Netrunner, no Deck built, lost to
+    Placide at 2× with 17 core. The bot agreed: 20 core through wave 8, then the wave-9 elite. Tried
+    lifting the global floor (wave-1 budget/HP up, ramp down, same wave 9): it wrecked Watson and
+    Westbrook, where the curve was right, and did nothing on the Deck maps, so it was dropped.
+    Lower `startEddies` alone barely moved waves 1–8 (480 → 340 still 20 through wave 8). Difficulty
+    is what makes the mid waves bite; 1.05 at 340 took wave 9 to 3. **Pacifica is now 1.0 / 380**:
+    bot 19/19/18/18 on waves 5–8, 9 on wave 9. Owner asked to keep this to Pacifica; Heywood,
+    Santo and Center (all 20 at wave 9, 7 towers and eddies to spare for the owner) are untouched.
 13. **Runners died before hacking.** Owner 3-starred Netrunner Westbrook 20/20 and reported the
     netrunners never got hacks off. Hack progress now lives on the tower and stacks across runners
     (`hackStack`). Swept 0 / 0.5 / 1 at Netrunner; bot wave-9 core: Watson 12 / 8 / 8, Westbrook
