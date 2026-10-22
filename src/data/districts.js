@@ -44,7 +44,7 @@ export const DISTRICTS = [
   {
     id: 'heywood', num: 3, name: 'HEYWOOD', sub: 'Vista del Rey · The Glen', color: '#ff8c1a', accent: '#fcee0a',
     desc: 'Valentinos and 6th Street trade bullets in the barrio. Heavies and trucks shrug off small arms.',
-    difficulty: 1.15, waves: 10, startEddies: 380, routeMode: 'switch',
+    difficulty: 1.45, waves: 10, startEddies: 380, routeMode: 'switch',
     routes: [
       [[9,1],[2,1],[2,4],[6,4],[6,7],[2,7],[2,10],[6,10],[6,14]],
     ],
@@ -63,7 +63,7 @@ export const DISTRICTS = [
   {
     id: 'santo', num: 4, name: 'SANTO DOMINGO', sub: 'Arroyo · Rancho Coronado', color: '#39ff14', accent: '#ff8c1a',
     desc: 'Militech is field-testing mechs in the factory district. Two entrances, one exit. Arc Nodes earn their keep.',
-    difficulty: 1.25, waves: 10, startEddies: 420, routeMode: 'all',
+    difficulty: 1.65, waves: 10, startEddies: 420, routeMode: 'all',
     routes: [
       [[-1,3],[3,3],[3,9],[8,9],[8,12],[4,12],[4,14]],
       [[9,3],[5,3],[5,9],[8,9],[8,12],[4,12],[4,14]],
@@ -104,7 +104,7 @@ export const DISTRICTS = [
   {
     id: 'center', num: 6, name: 'CITY CENTER', sub: 'Corpo Plaza · Arasaka Tower', color: '#ff2a6d', accent: '#fcee0a',
     desc: 'Arasaka wants its tower back. Troopers, runners, mechs, and the one they call Smasher.',
-    difficulty: 1.0, waves: 10, startEddies: 540, routeMode: 'all',
+    difficulty: 1.1, waves: 10, startEddies: 540, routeMode: 'all',
     routes: [
       [[-1,1],[4,1],[4,6],[1,6],[1,12],[4,12],[4,14]],
       [[9,1],[6,1],[6,6],[4,6],[1,6],[1,12],[4,12],[4,14]],

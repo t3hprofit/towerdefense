@@ -31,7 +31,7 @@ Current readings (`hpRamp` 0.38, boss rule on, so the bot loses every Netrunner 
 | Tier | Watson | Westbrook | Heywood | Santo | Pacifica | Center |
 |---|---|---|---|---|---|---|
 | Street (hacker) | 20 ★★★ | 20 ★★★ | 20 ★★★ | 20 ★★★ | 20 (boss) | 20 (boss) |
-| Netrunner (hacker) | 12 | 10 | 20 | 20 | 9 | 20 |
+| Netrunner (hacker) | 12 | 10 | 13 | 13 | 9 | 20 |
 | Legend (hacker) | wave 4 | wave 6 | wave 9 | wave 9 | wave 9 | wave 9 |
 
 (numbers are core left on wave 9 for Netrunner, the wave the bot fell on for Legend)
@@ -54,7 +54,7 @@ new players; breach discoverability for non-Cyberpunk players is an open questio
 
 | Knob | Where | Current | Effect |
 |---|---|---|---|
-| `difficulty` per district | `districts.js` | 1.6 / 0.95 / 1.15 / 1.25 / 1.0 / 1.0 | base HP and budget multiplier for regular waves |
+| `difficulty` per district | `districts.js` | 1.6 / 0.95 / 1.45 / 1.65 / 1.0 / 1.1 | base HP and budget multiplier for regular waves |
 | `startEddies` | `districts.js` | 280 / 340 / 380 / 420 / 380 / 540 | opening build |
 | `hpRamp` | `waves.js` | 0.38 | HP growth per wave (wave 10 = 4.4× wave 1) |
 | `budgetRamp` | `waves.js` | 4.5 | budget growth per wave (budget × 60 × hpMult = the wave's effective HP) |
@@ -129,6 +129,14 @@ TUNE='{"hpRamp":0.35,"econ":0.55,"diffs":{"watson":1.4}}' START='{"watson":300}'
     is what makes the mid waves bite; 1.05 at 340 took wave 9 to 3. **Pacifica is now 1.0 / 380**:
     bot 19/19/18/18 on waves 5–8, 9 on wave 9. Owner asked to keep this to Pacifica; Heywood,
     Santo and Center (all 20 at wave 9, 7 towers and eddies to spare for the owner) are untouched.
+14. **Deck maps too soft.** Owner then cleared them: Heywood 20/20 with 6 towers, Santo 20/20 with 7,
+    "didn't feel difficult". Cutting the Deck's slow to 15/25/35 did not move the bot at all on
+    those maps, so the tower was left alone; their `difficulty` (1.15 / 1.25 / 1.0 against Watson's
+    1.6) was the gap. **Heywood 1.45, Santo 1.65, Center 1.1**: bot 13 / 13 / 20 at wave 9. The bot
+    cliffs hard on these maps (Santo 1.75 → 2, Center 1.15 → 3: the wave-9 elite leaks and takes
+    the wave), so Center sits just under its cliff and the owner's runs decide the next step.
+    Readings taken after stacked netrunner hacks landed, which is why they run a few core under
+    the pre-stacking sweep (Heywood 1.5 read 13 before, 8 after).
 13. **Runners died before hacking.** Owner 3-starred Netrunner Westbrook 20/20 and reported the
     netrunners never got hacks off. Hack progress now lives on the tower and stacks across runners
     (`hackStack`). Swept 0 / 0.5 / 1 at Netrunner; bot wave-9 core: Watson 12 / 8 / 8, Westbrook
