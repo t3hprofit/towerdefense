@@ -18,7 +18,7 @@ dependencies. Everything (art, audio, icons) is generated in code. Read this fil
 | `src/data/music.js` | Songs: one per district plus `menu`, as chords / bass / arp / lead / drum patterns. Format documented at the top of the file; `src/core/audio.js` sequences them. |
 | `src/render/renderer.js` | Canvas drawing. `src/render/themes.js` per-district ground layer + ambient particles. |
 | `src/ui/ui.js` | All DOM: menus, trays, panels, tip strip, breach overlay, results, toasts. |
-| `src/core/` | `audio.js` (synth SFX + music), `save.js` (localStorage), `session.js` (sessionStorage score), `rng.js`. |
+| `src/core/` | `audio.js` (synth SFX + music), `save.js` (localStorage), `session.js` (sessionStorage score), `rng.js`, `analytics.js` (opt-in GA4; events go through `Game.trackRun`), `stats.js` (lifetime STATS FOR NERDS totals, local only, fed by the same events). |
 | `sw.js`, `manifest.webmanifest` | Offline cache + install metadata. |
 | `tools/` | Validator, balance sim, traces, Playwright smoke/capture tests. See README "Testing". |
 | `.github/workflows/static.yml` | Deploys this branch to GitHub Pages on push (the owner's workflow). |

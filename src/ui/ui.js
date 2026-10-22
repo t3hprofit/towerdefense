@@ -7,6 +7,8 @@ import { Save } from '../core/save.js';
 import { Audio } from '../core/audio.js';
 import { Session } from '../core/session.js';
 import { getConsent, setConsent } from '../core/analytics.js';
+import { Stats } from '../core/stats.js';
+import { DAEMONS } from '../data/daemons.js';
 
 const $ = (s) => document.querySelector(s);
 const fmtScore = (n) => n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : String(n);
@@ -16,13 +18,15 @@ export class UI {
   constructor() {
     this.game = null; this.tab = 'build'; this.breachEl = $('#screen-breach'); this.lastHud = {};
     this.els = { tip: $('#tip'), ticker: $('#ticker'), tickerText: $('#ticker-text'), top: $('#hud-top'), bottom: $('#hud-bottom'), panel: $('#panel'), trayBuild: $('#tray-build'), trayHacks: $('#tray-hacks'), waveInfo: $('#wave-info'), btnWave: $('#btn-wave'), btnBreach: $('#btn-breach'), btnSpeed: $('#btn-speed'), btnPause: $('#btn-pause') };
-    this.screens = { menu: $('#screen-menu'), districts: $('#screen-districts'), howto: $('#screen-howto'), breach: $('#screen-breach'), result: $('#screen-result'), pause: $('#screen-pause'), intro: $('#screen-intro') };
+    this.screens = { stats: $('#screen-stats'), menu: $('#screen-menu'), districts: $('#screen-districts'), howto: $('#screen-howto'), breach: $('#screen-breach'), result: $('#screen-result'), pause: $('#screen-pause'), intro: $('#screen-intro') };
   }
   bind(game, onQuit) {
     this.game = game; this.onQuit = onQuit;
     $('#btn-play').onclick = () => { Audio.init(); Audio.startMusic('menu'); Audio.play('jackin'); this.showScreen('districts'); };
     $('#btn-howto').onclick = () => this.showScreen('howto');
     $('#btn-back-howto').onclick = () => this.showScreen('menu');
+    $('#btn-stats').onclick = () => this.showScreen('stats');
+    $('#btn-back-stats').onclick = () => this.showScreen('menu');
     $('#btn-back-menu').onclick = () => this.showScreen('menu');
     $('#btn-sfx').onclick = () => { const cur = this.sfxLevel(); const v = cur === 1 ? 0.5 : cur === 0.5 ? 0 : 1; Save.setSetting('sfx', v); Audio.init(); Audio.setSfx(v); this.syncSettings(); Audio.play('blip'); };
     $('#btn-music').onclick = () => { const v = !Save.data.settings.music; Save.setSetting('music', v); Audio.init(); Audio.setMusic(v); this.syncSettings(); };
@@ -46,6 +50,36 @@ export class UI {
   showScreen(name) {
     for (const k in this.screens) this.screens[k].classList.toggle('hidden', k !== name);
     if (name === 'districts') this.renderDistricts();
+    if (name === 'stats') this.renderStats();
+  }
+  renderStats() {
+    const d = Stats.data, el = $('#nerd');
+    const n = (v) => fmtNum(v || 0);
+    const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '—';
+    const rows = (list) => `<div class="grid">${list.map(([k, v]) => `<span class="k">${k}</span><span class="v">${v}</span>`).join('')}</div>`;
+    const table = (heads, list) => `<div class="grid wide"><span></span>${heads.map(h => `<span class="h">${h}</span>`).join('')}${list.map(([k, ...vs]) => `<span class="k">${k}</span>${vs.map(v => `<span class="v">${v}</span>`).join('')}`).join('')}</div>`;
+    const sum = (o) => Object.values(o).reduce((a, b) => a + b, 0);
+    const mins = Math.floor(d.playSeconds / 60), time = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
+    const abandoned = Math.max(0, d.runs.started - d.runs.won - d.runs.lost);
+    const apNames = { TRAP: 'TRAPS', DOOR: 'BLAST DOORS', TURRET: 'TURRETS', REROUTE: 'REROUTES' };
+    const daemonRows = Object.keys(DAEMONS).filter(id => d.daemons[id]).map(id => [DAEMONS[id].name, n(d.daemons[id])]);
+    const apRows = Object.keys(apNames).filter(k => d.accessPoints[k]).map(k => [apNames[k], n(d.accessPoints[k])]);
+    el.innerHTML = `
+      <p class="since">LIFETIME, ALL TIERS · SINCE ${new Date(d.since).toLocaleDateString()} · STORED ON THIS DEVICE ONLY</p>
+      <h3>OVERVIEW</h3>${rows([
+        ['TIME IN COMBAT', time], ['RUNS', n(d.runs.started)], ['WON / LOST / QUIT', `${n(d.runs.won)} / ${n(d.runs.lost)} / ${n(abandoned)}`],
+        ['WIN RATE', pct(d.runs.won, d.runs.won + d.runs.lost)], ['PERFECT CLEARS (20/20)', n(d.perfectClears)], ['BEST SCORE', n(d.bestScore)], ['BEST COMBO', n(d.bestCombo)],
+        ['WAVES FACED', n(d.waves)], ['BOSS WAVES', n(d.bossWaves)], ['BOSSES KILLED', n(d.bossKills)], ['ENEMIES KILLED', n(d.kills)], ['LEAKS', n(d.leaks)]])}
+      <h3>TOWERS</h3>${table(['BUILT', 'UPGR', 'SOLD'], TOWER_ORDER.map(id => { const t = d.towers[id] || {}; return [TOWERS[id].name, n(t.built), n(t.upgraded), n(t.sold)]; }))}
+      ${rows([['EDDIES SPENT', '€$' + n(d.eddiesSpent)], ['EDDIES REFUNDED', '€$' + n(d.eddiesRefunded)]])}
+      <h3>QUICKHACKS</h3>${rows([...HACK_ORDER.filter(id => id !== 'purge').map(id => [QUICKHACKS[id].name, n(d.hacks[id])]),
+        ['TOTAL CAST', n(sum(d.hacks))], ['ICE SHIELDS BROKEN', n(d.iceBroken)], ['CAST ON BOSSES', n(d.bossHacks)], ['TOWERS PURGED', n(d.purges)]])}
+      <h3>BREACH PROTOCOL</h3>${rows([['BREACHES', n(d.breaches)], ['NOTHING UPLOADED', n(d.emptyBreaches)], ['DAEMONS UPLOADED', n(sum(d.daemons))], ...daemonRows])}
+      <h3>ACCESS POINTS</h3>${apRows.length ? rows(apRows) : '<p class="empty">None jacked yet.</p>'}
+      <h3>DISTRICTS</h3>${table(['RUNS', 'WINS', 'BEST WAVE'], DISTRICTS.map(x => { const s = d.districts[x.id] || {}; return [x.name, n(s.plays), n(s.wins), s.plays ? s.bestWave : '—']; }))}
+      <h3>DIFFICULTY</h3>${table(['RUNS', 'WINS', 'WIN %'], TIER_ORDER.map(id => { const s = d.tiers[id] || {}; return [TIERS[id].name, n(s.plays), n(s.wins), pct(s.wins || 0, s.plays || 0)]; }))}
+      <button class="btn small danger reset" id="btn-reset-stats">RESET STATS</button>`;
+    $('#btn-reset-stats').onclick = () => { if (confirm('Reset all lifetime stats?')) { Stats.reset(); this.renderStats(); } };
   }
   hideScreens() { for (const k in this.screens) this.screens[k].classList.add('hidden'); }
   quit() { this.game.state = 'menu'; this.game.district = null; Audio.startMusic('menu'); this.els.top.classList.add('hidden'); this.els.bottom.classList.add('hidden'); this.els.ticker.classList.add('hidden'); this.closePanel(); this.showScreen('districts'); if (this.onQuit) this.onQuit(); }

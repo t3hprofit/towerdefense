@@ -12,6 +12,7 @@ import { Audio } from '../core/audio.js';
 import { Save } from '../core/save.js';
 import { Session } from '../core/session.js';
 import { track } from '../core/analytics.js';
+import { Stats } from '../core/stats.js';
 import { tierById } from '../data/tiers.js';
 
 const RAM_BASE = 12, RAM_REGEN = 0.45;
@@ -57,7 +58,7 @@ export class Game {
     this.nextWave = generateWave(district, 1, this.tier.id);
     this.lastKillT = -Infinity; this.waveLeaked = false; this.waveTimer = PREP_FIRST; this.bossLeaked = null;
     Session.beginRun(district.id);
-    track('district_start', { district: district.id, tier: this.tier.id });
+    this.trackRun('district_start');
     this.hintsShown = new Set();
     this.ui.onDistrictStart();
     this.hint('build', 'Tap a tower below, then tap an empty cell to build.');
@@ -70,8 +71,8 @@ export class Game {
   }
 
   // ---------------- Helpers ----------------
-  // Analytics event with the run context every event carries.
-  trackRun(name, params = {}) { track(name, { district: this.district.id, tier: this.tier.id, wave: this.wave, ...params }); }
+  // Analytics event with the run context every event carries; also feeds the lifetime nerd stats.
+  trackRun(name, params = {}) { const p = { district: this.district.id, tier: this.tier.id, wave: this.wave, ...params }; track(name, p); Stats.record(name, p); }
   cellKey(c, r) { return c + ',' + r; }
   inGrid(c, r) { return c >= 0 && c < this.cols && r >= 0 && r < this.rows; }
   towerAt(c, r) { return this.towers.find(t => t.c === c && t.r === r); }
@@ -200,7 +201,7 @@ export class Game {
   jackIn(ap) {
     if (ap.cooldown > 0) { this.ui.toast('Access point rebooting', 'warn'); return; }
     if (this.ram < ap.cost) { this.ui.toast('Not enough RAM', 'warn'); Audio.play('deny'); return; }
-    this.ram -= ap.cost; this.stats.apHacks++; this.addScore(SCORE_AP);
+    this.ram -= ap.cost; this.stats.apHacks++; this.addScore(SCORE_AP); Stats.record('access_point', { type: ap.type });
     const x = ap.c + 0.5, y = ap.r + 0.5;
     switch (ap.type) {
       case 'TRAP': {
@@ -267,7 +268,7 @@ export class Game {
     const w = this.nextWave; this.spawnList = scheduleWave(w); this.currentWave = w;
     this.selectedTower = null; this.ui.closePanel();
     Audio.play(w.boss ? 'boss' : 'wave');
-    track('wave_start', { district: this.district.id, tier: this.tier.id, wave: this.wave, boss: !!w.boss });
+    this.trackRun('wave_start', { boss: !!w.boss });
     this.ui.toast(w.boss ? `BOSS WAVE · ${ENEMIES[this.district.boss].name}` : `WAVE ${this.wave}`, w.boss ? 'warn' : 'default');
     this.ui.refreshTrays();
   }
@@ -308,7 +309,7 @@ export class Game {
     const score = won ? Session.state.runScore : Math.round(Session.state.runScore * 0.5); const prevBest = Save.district(this.district.id, this.tier.id).bestScore || 0;
     Save.recordResult(this.district.id, { won, wave: this.wave, stars, nextId: next ? next.id : null, score, tier: this.tier.id });
     const extra = { score, best: Math.max(prevBest, score), newBest: score > prevBest, total: Session.state.sessionScore, bestCombo: Session.state.bestCombo };
-    track('district_end', { district: this.district.id, tier: this.tier.id, won, wave: this.wave, stars, lives: this.lives, score });
+    this.trackRun('district_end', { won, stars, lives: this.lives, score, combo: Session.state.bestCombo });
     Audio.play(won ? 'win' : 'lose');
     this.ui.showResult({ won, stars, next, stats: this.stats, wave: this.wave, lives: this.lives, bossLeaked: this.bossLeaked, ...extra });
   }
@@ -317,6 +318,7 @@ export class Game {
   update(dtReal) {
     if (this.state === 'breach') { this.breach?.tick(dtReal); this.ui.tickBreach(this.breach); }
     if (!this.simActive() || this.paused) return;
+    Stats.addTime(dtReal);
     // The battlefield keeps running under the breach overlay (at 1x) so a slow breach costs real time.
     let dt = dtReal * (this.state === 'breach' ? 1 : this.speed);
     while (dt > 0 && this.simActive()) { const step = Math.min(dt, 1 / 60); this.step(step); dt -= step; }
@@ -428,7 +430,7 @@ export class Game {
     if (best) { e.hacks.push({ tower: best }); best.hackers = (best.hackers || 0) + 1; }
   }
   leak(e) {
-    e.dead = true; this.stats.leaks++;
+    e.dead = true; this.stats.leaks++; Stats.record('leak');
     // A boss reaching the core ends the run outright.
     if (e.boss) { this.dropHacks(e); this.bossLeaked = e.name; this.shake = 1; this.flash = 0.6; Audio.play('leak'); this.ui.toast(`${e.name} REACHED THE CORE`, 'warn', 4000); this.finish(false); return; }
     const dmg = 1; this.lives = Math.max(0, this.lives - dmg);
@@ -453,7 +455,7 @@ export class Game {
   kill(e, src = null) {
     e.dead = true;
     let reward = Math.max(1, Math.round(e.reward * ECON() / (1 + REWARD_DECAY() * (this.wave - 1)))); if (this.fx.bounty > 0) reward = Math.round(reward * 1.6);
-    this.eddies += reward; this.stats.kills++;
+    this.eddies += reward; this.stats.kills++; Stats.record('kill', { boss: !!e.boss });
     this.scoreKill(e);
     this.text(e.x, e.y - 0.3, `+${reward}`, '#fcee0a', e.boss ? 1.6 : 1);
     this.burst(e.x, e.y, e.color, e.boss ? 60 : 10, e.boss ? 5 : 2.2);

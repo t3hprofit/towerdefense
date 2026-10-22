@@ -5,9 +5,11 @@ import { Save } from './core/save.js';
 import { Audio } from './core/audio.js';
 import { Session } from './core/session.js';
 import { initAnalytics } from './core/analytics.js';
+import { Stats } from './core/stats.js';
 
 Save.load();
 Session.load();
+Stats.load();
 initAnalytics();
 const ui = new UI();
 const game = new Game(ui);
@@ -67,13 +69,13 @@ window.addEventListener('keydown', (e) => {
 
 // Pause when backgrounded (phone lock, app switch)
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (game.state === 'play') ui.pause(true); Audio.background(); return; }
+  if (document.hidden) { if (game.state === 'play') ui.pause(true); Audio.background(); Stats.flush(); return; }
   // Back from lock / app switch: resume audio and check for a new version.
   Audio.foreground();
   if (swReg) swReg.update().catch(() => {});
 });
 
-window.addEventListener('pagehide', () => Audio.background());
+window.addEventListener('pagehide', () => { Audio.background(); Stats.flush(); });
 
 // ---------- Main loop ----------
 let last = performance.now();
@@ -96,4 +98,4 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && game.state === 'menu') location.reload(); hadController = true; });
 }
 // Expose for debugging / automated tests
-window.__ncb = { game, ui, renderer, Save, Audio, Session };
+window.__ncb = { game, ui, renderer, Save, Audio, Session, Stats };
